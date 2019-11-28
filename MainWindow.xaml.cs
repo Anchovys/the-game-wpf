@@ -12,70 +12,64 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace the_game_wpf
 {
-    public class Item
-    {
-        public const int BlockSizeInPixelsX = 10; // размеры блока в пикселях по X
-        public const int BlockSizeInPixelsY = 10; // размеры блока в пикселях по Y
-
-        public Point GetAbsolutePositionByCoordinates(int x, int y)
-        {
-            return new Point(BlockSizeInPixelsX * x, BlockSizeInPixelsY * y);
-        }
-        public Point GetCoordinatesByAbsolutePosition(int x, int y)
-        {
-            return new Point(x / BlockSizeInPixelsX, y / BlockSizeInPixelsY);
-        }
-        public Rectangle MakeRectangle(Brush color)
-        {
-            Rectangle temporaryRectangle = new Rectangle();
-            temporaryRectangle.Width = BlockSizeInPixelsX;
-            temporaryRectangle.Height = BlockSizeInPixelsY;
-            temporaryRectangle.Fill = color;
-
-            return temporaryRectangle;
-        }
-    }
-    public class GameObject : Item
-    {
-        public Point Position = new Point();
-        public Rectangle Figure = new Rectangle();
-    }
-    public class WallObject : GameObject
-    {
-        public const char InitChar = '+';
-        public WallObject(Point startPosition)
-        {
-            Position = startPosition;
-            Figure = MakeRectangle(Brushes.Black);
-        }
-    }
-    public class ExitObject : GameObject
-    {
-        public const char InitChar = '=';
-        public ExitObject(Point startPosition)
-        {
-            Position = startPosition;
-            Figure = MakeRectangle(Brushes.Green);
-        }
-    }
-
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
-
+        public Dispatcher dispatcher;
+        public int tick = 0;
+        Map map = new Map("map.txt");
+        Canvas parentZone;
         public MainWindow()
         {
             InitializeComponent();
+            dispatcher = Dispatcher;
+            parentZone = GameField;
+
+            Load();
         }
 
-        public void FillBuffer()
+        private async void Load()
         {
+            await TickTack();
+        }
 
+        private async Task TickTack()
+        {
+            while (true)
+            {
+                if (tick == 10)
+                {
+                    map.Drawing(parentZone);
+                    tick = 0;
+                }
+                else tick++;
+                await Task.Delay(10); // ~ 100 FPS
+            }
+        }
+
+        private void Grid_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.Key)
+            {
+                case Key.W:
+                    Console.WriteLine("w");
+                    break;
+                case Key.D:
+                    Console.WriteLine("d");
+                    break;
+                case Key.A:
+                    Console.WriteLine("a");
+                    break;
+                case Key.S:
+                    Console.WriteLine("s");
+                    break;
+            }
         }
     }
 }

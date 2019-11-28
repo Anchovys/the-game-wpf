@@ -1,0 +1,14 @@
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\bin\Debug\the-game-wpf.exe.config
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\bin\Debug\the-game-wpf.exe
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\bin\Debug\the-game-wpf.pdb
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\obj\Debug\the-game-wpf.csprojAssemblyReference.cache
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\obj\Debug\MainWindow.g.cs
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\obj\Debug\App.g.cs
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\obj\Debug\the-game-wpf_MarkupCompile.cache
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\obj\Debug\the-game-wpf_MarkupCompile.lref
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\obj\Debug\MainWindow.baml
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\obj\Debug\the-game-wpf.g.resources
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\obj\Debug\the_game_wpf.Properties.Resources.resources
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\obj\Debug\the-game-wpf.csproj.GenerateResource.cache
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\obj\Debug\the-game-wpf.exe
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\obj\Debug\the-game-wpf.pdb

@@ -6,8 +6,15 @@
         xmlns:local="clr-namespace:the_game_wpf"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <Canvas x:Name="GameField" HorizontalAlignment="Left" Height="399" Margin="10,10,0,0" VerticalAlignment="Top" Width="772"/>
+    <Grid KeyDown="Grid_KeyDown">
+        <TabControl HorizontalAlignment="Left" Height="399" Margin="10,10,0,0" VerticalAlignment="Top" Width="772">
+            <TabItem Header="Настройки">
+                <Grid Background="#FFE5E5E5" Margin="0,0,0,-305"/>
+            </TabItem>
+            <TabItem Header="Игра">
+                <Canvas x:Name="GameField" Height="373" VerticalAlignment="Top" Background="#FF073F81" Margin="0,0,0,0"/>
+            </TabItem>
+        </TabControl>
 
     </Grid>
 </Window>
