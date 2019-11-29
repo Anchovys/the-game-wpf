@@ -8,7 +8,14 @@ namespace the_game_wpf
 {
     class GameController
     {
+        public Map mainMap;
+        public HeroObject heroObject;
 
+        public GameController()
+        {
+            mainMap = new Map("map.txt");
+            heroObject = (HeroObject)mainMap.FindObject(new HeroObject());
+        }
 
 
     }

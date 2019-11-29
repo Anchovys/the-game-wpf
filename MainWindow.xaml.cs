@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,55 +22,54 @@ namespace the_game_wpf
     /// </summary>
     public partial class MainWindow : Window
     {
-        public Dispatcher dispatcher;
-        public int tick = 0;
-        Map map = new Map("map.txt");
-        Canvas parentZone;
+        private readonly BackgroundWorker worker = new BackgroundWorker();
+        public Canvas parentZone;
+        GameController controller = new GameController();
+
+        Dispatcher dispatcher;
+
         public MainWindow()
         {
             InitializeComponent();
-            dispatcher = Dispatcher;
+
             parentZone = GameField;
+            dispatcher = Dispatcher;
 
-            Load();
+            worker.DoWork += worker_DoWork;
+            worker.RunWorkerCompleted += worker_RunWorkerCompleted;
+
+            worker.RunWorkerAsync();
         }
 
-        private async void Load()
+        private void worker_DoWork(object sender, DoWorkEventArgs e)
         {
-            await TickTack();
-        }
+            int tick = 0;
 
-        private async Task TickTack()
-        {
             while (true)
             {
-                if (tick == 10)
+                System.Threading.Thread.Sleep(10);
+                if (tick == 100)
                 {
-                    map.Drawing(parentZone);
+                    
                     tick = 0;
+
+                    controller.mainMap.Drawing(parentZone, dispatcher);
+                    controller.heroObject.Move(Key.S);
+                    
                 }
                 else tick++;
-                await Task.Delay(10); // ~ 100 FPS
+
+
             }
+        }
+
+        private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            
         }
 
         private void Grid_KeyDown(object sender, KeyEventArgs e)
         {
-            switch (e.Key)
-            {
-                case Key.W:
-                    Console.WriteLine("w");
-                    break;
-                case Key.D:
-                    Console.WriteLine("d");
-                    break;
-                case Key.A:
-                    Console.WriteLine("a");
-                    break;
-                case Key.S:
-                    Console.WriteLine("s");
-                    break;
-            }
         }
     }
 }

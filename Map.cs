@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Windows.Controls;
+using System.Windows.Threading;
 
 namespace the_game_wpf
 {
@@ -13,7 +14,7 @@ namespace the_game_wpf
     {
         public int Width;
         public int Height;
-        private Dictionary<MyPoint, GameObject> GameObjects = new Dictionary<MyPoint, GameObject>();
+        public Dictionary<MyPoint, GameObject> GameObjects = new Dictionary<MyPoint, GameObject>();
 
         public Map(string textFile) 
 		{
@@ -45,6 +46,9 @@ namespace the_game_wpf
                             case CoinObject.InitChar:
                                 gameObject = new CoinObject(new MyPoint(x, y));
                                 break;
+                            case HeroObject.InitChar:
+                                gameObject = new HeroObject(new MyPoint(x, y));
+                                break;
                         }
 
                         if (gameObject != null)
@@ -61,19 +65,25 @@ namespace the_game_wpf
             }
         }
 
-        public void Drawing(Canvas parent) 
+        public void Drawing(Canvas parent, Dispatcher dispatcher) 
 		{
-            parent.Children.Clear();
-            foreach (var item in GameObjects)
+            dispatcher.Invoke(() =>
             {
-                GameObject @object = item.Value;
-				
-				parent.Children.Add(@object.Figure);
-                MyPoint position = @object.GetAbsolutePositionByCoordinates(@object.Position);
+				parent.Children.Clear();
+                foreach (var item in GameObjects)
+                {
+					GameObject @object = item.Value;
 
-                Canvas.SetLeft(@object.Figure, position.X);
-                Canvas.SetTop(@object.Figure, position.Y);
-            }
+                    if (@object == null)
+                        continue;
+
+                    parent.Children.Add(@object.Figure);
+                    MyPoint position = @object.GetAbsolutePositionByCoordinates(@object.Position);
+
+                    Canvas.SetLeft(@object.Figure, position.X);
+                    Canvas.SetTop(@object.Figure, position.Y);
+                }
+            });
         }
 
         public GameObject GetByCoords(MyPoint cords) 
@@ -84,19 +94,42 @@ namespace the_game_wpf
             return GameObjects[cords];
         }
 
+        /// <summary>
+        /// Находит координаты первого попавшегося обьекта
+        /// </summary>
+        /// <param name="mapObject">Тип обьекта, который нужно найти</param>
+        /// <returns>Обьект</returns>
+        public GameObject FindObject(GameObject mapObject)
+        {
+            GameObject result = null;
+
+            foreach (var item in GameObjects)
+            {
+                GameObject @object = item.Value;
+                if (@object != null && @object.GetType() == mapObject.GetType())
+                    result = @object;
+            }
+
+            return result;
+        }
+
         public bool PlaceObject(MyPoint cords, GameObject gameObject, bool replace = false) 
 		{
             if (!GameObjects.ContainsKey(cords)) // без замены обьекта
             {
-				GameObjects.Add(cords, gameObject);
+                GameObjects.Add(cords, gameObject);
                 return true;
             }
             else if(replace) // заменять обьект, даже если там что-то есть
 			{
-				GameObjects[cords] = gameObject;
+                if (gameObject != null)
+                {
+                    GameObjects[cords] = gameObject;
+                }
+                else GameObjects.Remove(cords);
+
                 return true;
             }
-
             return false;
 		}
     }

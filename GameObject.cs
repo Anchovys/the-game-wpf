@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
@@ -75,6 +76,71 @@ namespace the_game_wpf
         {
             Position = startPosition;
             Figure = MakeRectangle(Brushes.LightGray);
+        }
+    }
+    public class HeroObject : GameObject
+    {
+        public const char InitChar = '+';
+        public HeroObject() { }
+        public HeroObject(MyPoint startPosition)
+        {
+            Position = startPosition;
+            Figure = MakeRectangle(Brushes.PaleGreen);
+        }
+        public bool Move(Key key)
+        {
+            var newCoors = new MyPoint(Position);
+
+            switch (key)
+            {
+                case Key.W:
+                case Key.Up:
+                    newCoors.Y--;
+                    break;
+                case Key.S:
+                case Key.Down:
+                    newCoors.Y++;
+                    break;
+                case Key.A:
+                case Key.Left:
+                    newCoors.X--;
+                    break;
+                case Key.D:
+                case Key.Right:
+                    newCoors.X++;
+                    break;
+                default:
+                    return false;
+            }
+
+            foreach (var item in MyMap.GameObjects)
+            {
+                if (item.Key.X == 1)
+                {
+                    if (item.Value != null)
+                        Console.WriteLine("ТУТ: {0} ---> {1}", item.Key.String(), item.Value.GetType().ToString());
+                    else Console.WriteLine("ТУТ: {0} ---> {1}", item.Key.String(), "ПУСТО");
+                }
+            }
+
+
+            GameObject inPathObject = MyMap.GetByCoords(newCoors);
+
+            Console.WriteLine("WANT GO ->" + newCoors.String());
+            Console.ReadKey();
+
+
+            if(MyMap.GameObjects.ContainsKey(newCoors))
+                Console.WriteLine("HERE " + MyMap.GameObjects[newCoors].GetType().Name);
+            else
+                Console.WriteLine("HERE NULL");
+
+            if (inPathObject is WallObject)
+                return false;
+
+            Move(newCoors);
+
+            return true;
         }
     }
 }
