@@ -3,7 +3,7 @@
     class Tick
     {
         int TickSpeed = 10; // с какой скоростью увеличивать тики
-        int TickRate = 10;  // через какое количество тиков их нужно сбросить
+        int TickRate = 50;  // через какое количество тиков их нужно сбросить
         int CurTick;
         bool Starts;
         public bool InPause;

@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Diagnostics;
 
 namespace the_game_wpf
 {
@@ -50,6 +51,15 @@ namespace the_game_wpf
         /// </summary>
         public void Update()
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
+            if (LastInputKey != -1) // какая-то кнопка была зажата
+            {
+                HeroObject.Move((Key)LastInputKey); // передаем управление игроку
+                LastInputKey = -1; // сбрасываем кнопку
+            }
+
             foreach (var item in MainMap.FindObjects(new EnemyObject()))
             {
                 EnemyObject enemy = (EnemyObject)item;
@@ -57,12 +67,11 @@ namespace the_game_wpf
                 enemy.CheckCollision();
             }
 
-            if (LastInputKey != -1) // какая-то кнопка была зажата
-            {
-                HeroObject.Move((Key)LastInputKey); // передаем управление игроку
-                LastInputKey = -1; // сбрасываем кнопку
-            }
             MainMap.Drawing(GameCanvas);
+
+            Console.WriteLine("Кадр был отрисован за {0} мс", sw.ElapsedMilliseconds);
+            sw.Stop();
+
         }
 
         public void ChangeState(bool to) 

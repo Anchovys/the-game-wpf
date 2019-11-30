@@ -50,11 +50,13 @@ namespace the_game_wpf
         
         public void Destroy()
         {
+            Console.WriteLine("--> Обьект {0} был удален с карты ({1})", GetType().Name, Position.String());
             MyMap.PlaceObject(Position, null, true);
         }
 
         public void Move(MyPoint newPosition) 
         {
+            Console.WriteLine("--> Обьект {0} был перемещен ({1} --> {2})", GetType().Name, Position.String(), newPosition.String());
             Destroy(); // уничтожим старый обьект
             Position = newPosition;  // поменяем позицию текущего
             MyMap.PlaceObject(newPosition, this, true); // запишем в новую

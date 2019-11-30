@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using System.Diagnostics;
 
 namespace the_game_wpf
 {
@@ -15,7 +16,10 @@ namespace the_game_wpf
         public int Width;
         public int Height;
         private readonly Dictionary<MyPoint, GameObject> GameObjects = new Dictionary<MyPoint, GameObject>();
-        private readonly Dispatcher Dispatcher;
+        private Dictionary<MyPoint, GameObject> Changes = new Dictionary<MyPoint, GameObject>();
+
+		private readonly Dispatcher Dispatcher;
+
 
         public new int GetHashCode()
         {
@@ -29,6 +33,8 @@ namespace the_game_wpf
 
         public Map(string textFile, GameController controller) 
 		{
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             Dispatcher = controller.Window.Dispatcher;
             Dispatcher.Invoke(() =>
             {
@@ -81,39 +87,46 @@ namespace the_game_wpf
                 {
                     throw new Exception("Ошибка при загрузке карты! {0}", e);
                 }
+                Console.WriteLine("Чтение карты завершено за {0} мс", sw.ElapsedMilliseconds);
             });
+            sw.Stop();
         }
 
         int hash;
         public void Drawing(Canvas parent) 
 		{
-			// оптимизация - проверка на изменение карты по хешу
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
+            // оптимизация #0 - проверка на изменение карты по хешу
             if (hash != GetHashCode())
             {
                 hash = GetHashCode();
 
                 Dispatcher.Invoke(() =>
                 {
-                    parent.Children.Clear();
-                    foreach (var item in GameObjects)
+                    foreach (var item in Changes)
                     {
                         GameObject @object = item.Value;
 
                         if (@object == null)
                             continue;
 
-                        parent.Children.Add(@object.Figure);
+                        if (GameObjects.ContainsValue(@object))
+                            parent.Children.Remove(@object.Figure);
+
+						parent.Children.Add(@object.Figure);
+
                         MyPoint position = @object.GetAbsolutePositionByCoordinates(@object.Position);
 
                         Canvas.SetLeft(@object.Figure, position.X);
                         Canvas.SetTop(@object.Figure, position.Y);
                     }
                 });
+                Console.WriteLine("Отрисовка карты завершена за {0} мс", sw.ElapsedMilliseconds);
             }
-            else 
-			{
-                Console.WriteLine("Пропуск отрисовки");
-			}
+            sw.Stop();
+            Changes.Clear();
         }
 
         public GameObject GetByCoords(MyPoint cords) 
@@ -193,16 +206,20 @@ namespace the_game_wpf
 
         public bool PlaceObject(MyPoint cords, GameObject gameObject, bool replace = false)
         {
+            Changes.Add(cords, gameObject);
+
             if (!GameObjects.ContainsKey(cords)) // без замены обьекта
             {
                 GameObjects.Add(cords, gameObject);
+
                 return true;
             }
             else if (replace) // заменять обьект, даже если там что-то есть
             {
-                if (gameObject != null)
-                    GameObjects[cords] = gameObject;
+                if (gameObject != null) 
+					GameObjects[cords] = gameObject;
                 else GameObjects.Remove(cords);
+
                 return true;
             }
             return false;
