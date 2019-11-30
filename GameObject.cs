@@ -32,13 +32,22 @@ namespace the_game_wpf
             temporaryRectangle.Fill = color;
             return temporaryRectangle;
         }
+        public Ellipse MakeCurcle(Brush color)
+        {
+            Ellipse temporaryRectangle = new Ellipse();
+            temporaryRectangle.Width = BlockSizeInPixelsX;
+            temporaryRectangle.Height = BlockSizeInPixelsY;
+            temporaryRectangle.Fill = color;
+            return temporaryRectangle;
+        }
     }
     public class GameObject : Item
     {
         public MyPoint Position = new MyPoint();
-        public Rectangle Figure = new Rectangle();
+        public UIElement Figure = new UIElement();
         public Map MyMap;
-
+        public GameController Controller;
+        
         public void Destroy()
         {
             MyMap.PlaceObject(Position, null, true);
@@ -66,7 +75,7 @@ namespace the_game_wpf
         public CoinObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeRectangle(Brushes.Gold);
+            Figure = MakeCurcle(Brushes.Gold);
         }
     }
     public class ExitObject : GameObject
@@ -77,6 +86,89 @@ namespace the_game_wpf
             Position = startPosition;
             Figure = MakeRectangle(Brushes.LightGray);
         }
+    }
+    public class EnemyObject : GameObject
+    {
+        public byte AttackZoneJumping = 2;  // область атаки прыжка
+        public byte AttackZone = 1;         // область атаки ближний бой
+        public byte ViewZone = 10;          // область видимости
+        public GameObject Target;            // обьект, который выбран для преследования
+        public const char InitChar = '?';
+        public EnemyObject() { }
+        public EnemyObject(MyPoint startPosition)
+        {
+            Position = startPosition;
+            Figure = MakeRectangle(Brushes.Black);
+        }
+        /// <summary>
+        /// Движение монстра к какому-либо обьекту
+        /// </summary>
+        /// <param name="targetPos">Позиция обьекта</param>
+        public void MoveToTarget(MyPoint targetPos)
+        {
+            var newCoors = new MyPoint(Position);
+            bool move = false;
+
+            // Движения "по-тупому"
+            {
+                if (targetPos.X < Position.X)
+                {
+                    newCoors.X--;
+                    move = true;
+                }
+                else if (targetPos.X > Position.X)
+                {
+                    newCoors.X++;
+                    move = true;
+                }
+
+                if (!move)
+                    if (targetPos.Y < Position.Y)
+                        newCoors.Y--;
+                    else if (targetPos.Y > Position.Y)
+                        newCoors.Y++;
+            }
+
+            if (MyMap.GetByCoords(newCoors) is null)
+                Move(newCoors);
+        }
+
+        /// <summary>
+        /// Обработка коллизий
+        /// </summary>
+        public void CheckCollision()
+        {
+            foreach (var item in Position.GetNearPoints(AttackZoneJumping, true))
+            {
+                GameObject tObject = MyMap.GetByCoords(item);
+                if (tObject is HeroObject)
+                    Controller.ChangeState(false);
+            }
+            foreach (var item in Position.GetNearPoints(AttackZone, false))
+            {
+                GameObject tObject = MyMap.GetByCoords(item);
+                if (tObject is EnemyObject && tObject != this)
+                    Destroy();
+            }
+        }
+
+        /// <summary>
+        /// Хендлер перемещения врага к обьекту
+        /// </summary>
+        public void Move()
+        {
+            if (Target != null)
+                MoveToTarget(Target.Position);
+
+            // найти самый ближайший обьект игрок или монстр
+            GameObject localObject = MyMap.FindNearlyObject(
+                new GameObject[] { new EnemyObject(), new HeroObject() },
+                Position, Position.GetNearPoints(ViewZone, false));
+
+            if (localObject != this) // не должен быть текущим обьектом, в случае нахождения Enemy
+                Target = localObject;
+        }
+
     }
     public class HeroObject : GameObject
     {
@@ -113,30 +205,13 @@ namespace the_game_wpf
                     return false;
             }
 
-            foreach (var item in MyMap.GameObjects)
-            {
-                if (item.Key.X == 1)
-                {
-                    if (item.Value != null)
-                        Console.WriteLine("ТУТ: {0} ---> {1}", item.Key.String(), item.Value.GetType().ToString());
-                    else Console.WriteLine("ТУТ: {0} ---> {1}", item.Key.String(), "ПУСТО");
-                }
-            }
-
-
             GameObject inPathObject = MyMap.GetByCoords(newCoors);
-
-            Console.WriteLine("WANT GO ->" + newCoors.String());
-            Console.ReadKey();
-
-
-            if(MyMap.GameObjects.ContainsKey(newCoors))
-                Console.WriteLine("HERE " + MyMap.GameObjects[newCoors].GetType().Name);
-            else
-                Console.WriteLine("HERE NULL");
 
             if (inPathObject is WallObject)
                 return false;
+
+            if (inPathObject is CoinObject)
+                Controller.ChangeState(false);
 
             Move(newCoors);
 

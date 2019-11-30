@@ -5,16 +5,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:the_game_wpf"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="469" Width="800" ResizeMode="NoResize">
     <Grid KeyDown="Grid_KeyDown">
-        <TabControl HorizontalAlignment="Left" Height="399" Margin="10,10,0,0" VerticalAlignment="Top" Width="772">
+        <TabControl HorizontalAlignment="Left" Height="399" Margin="2,33,0,0" VerticalAlignment="Top" Width="792">
+            <TabItem Header="Игра">
+                <Grid>
+                    <Canvas x:Name="GameField" Height="373" VerticalAlignment="Top" Background="#FF073F81" Margin="0,0,0,0"/>
+                </Grid>
+            </TabItem>
             <TabItem Header="Настройки">
                 <Grid Background="#FFE5E5E5" Margin="0,0,0,-305"/>
             </TabItem>
-            <TabItem Header="Игра">
-                <Canvas x:Name="GameField" Height="373" VerticalAlignment="Top" Background="#FF073F81" Margin="0,0,0,0"/>
-            </TabItem>
         </TabControl>
-
+        <Button x:Name="StartOrPause" Content="Начать" Margin="0,5,23,0" Click="StartOrPause_Click" RenderTransformOrigin="0.96,0.393" HorizontalAlignment="Right" Width="75" Height="28" VerticalAlignment="Top"/>
     </Grid>
 </Window>
