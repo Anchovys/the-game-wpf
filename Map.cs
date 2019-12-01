@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Drawing;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -15,11 +12,10 @@ namespace the_game_wpf
     {
         public int Width;
         public int Height;
+
         private readonly Dictionary<MyPoint, GameObject> GameObjects = new Dictionary<MyPoint, GameObject>();
         private Dictionary<MyPoint, GameObject> Changes = new Dictionary<MyPoint, GameObject>();
-
 		private readonly Dispatcher Dispatcher;
-
 
         public new int GetHashCode()
         {
@@ -55,22 +51,23 @@ namespace the_game_wpf
                         for (int y = 0; y < Height; y++)
                         {
                             GameObject gameObject = null;
+
                             switch (lines[y][x])
                             {
                                 case WallObject.InitChar:
-                                    gameObject = new WallObject(new MyPoint(x, y));
+                                    gameObject = new WallObject(new MyPoint() { X = x, Y = y });
                                     break;
                                 case ExitObject.InitChar:
-                                    gameObject = new ExitObject(new MyPoint(x, y));
+                                    gameObject = new ExitObject(new MyPoint() { X = x, Y = y });
                                     break;
                                 case CoinObject.InitChar:
-                                    gameObject = new CoinObject(new MyPoint(x, y));
+                                    gameObject = new CoinObject(new MyPoint() { X = x, Y = y });
                                     break;
                                 case HeroObject.InitChar:
-                                    gameObject = new HeroObject(new MyPoint(x, y));
+                                    gameObject = new HeroObject(new MyPoint() { X = x, Y = y });
                                     break;
                                 case EnemyObject.InitChar:
-                                    gameObject = new EnemyObject(new MyPoint(x, y));
+                                    gameObject = new EnemyObject(new MyPoint() { X = x, Y = y });
                                     break;
                             }
 
@@ -171,7 +168,6 @@ namespace the_game_wpf
                 if (@object != null && @object.GetType() == mapObject.GetType())
                     result.Add(@object);
             }
-
             return result.ToArray();
         }
 
@@ -206,12 +202,13 @@ namespace the_game_wpf
 
         public bool PlaceObject(MyPoint cords, GameObject gameObject, bool replace = false)
         {
+            if (Changes.ContainsKey(cords))
+                Changes.Remove(cords);
             Changes.Add(cords, gameObject);
 
             if (!GameObjects.ContainsKey(cords)) // без замены обьекта
             {
                 GameObjects.Add(cords, gameObject);
-
                 return true;
             }
             else if (replace) // заменять обьект, даже если там что-то есть
@@ -219,7 +216,6 @@ namespace the_game_wpf
                 if (gameObject != null) 
 					GameObjects[cords] = gameObject;
                 else GameObjects.Remove(cords);
-
                 return true;
             }
             return false;

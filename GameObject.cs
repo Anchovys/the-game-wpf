@@ -18,11 +18,11 @@ namespace the_game_wpf
 
         public MyPoint GetAbsolutePositionByCoordinates(MyPoint point)
         {
-            return new MyPoint(BlockSizeInPixelsX * point.X, BlockSizeInPixelsY * point.Y);
+            return new MyPoint() { X = BlockSizeInPixelsX * point.X, Y = BlockSizeInPixelsY * point.Y };
         }
         public MyPoint GetCoordinatesByAbsolutePosition(int x, int y)
         {
-            return new MyPoint(x / BlockSizeInPixelsX, y / BlockSizeInPixelsY);
+            return new MyPoint() { X = x / BlockSizeInPixelsX, Y = y / BlockSizeInPixelsY };
         }
         public Rectangle MakeRectangle(Brush color)
         {
@@ -108,7 +108,7 @@ namespace the_game_wpf
         /// <param name="targetPos">Позиция обьекта</param>
         public void MoveToTarget(MyPoint targetPos)
         {
-            var newCoors = new MyPoint(Position);
+            var newCoors = new MyPoint() { X = Position.X, Y = Position.Y };
             bool move = false;
 
             // Движения "по-тупому"
@@ -143,8 +143,9 @@ namespace the_game_wpf
             foreach (var item in Position.GetNearPoints(AttackZoneJumping, true))
             {
                 GameObject tObject = MyMap.GetByCoords(item);
+
                 if (tObject is HeroObject)
-                    Controller.ChangeState(false);
+                    Controller.ShowBox("Вас сожрали монстры — с кем не бывает?", true);
             }
             foreach (var item in Position.GetNearPoints(AttackZone, false))
             {
@@ -183,7 +184,7 @@ namespace the_game_wpf
         }
         public bool Move(Key key)
         {
-            var newCoors = new MyPoint(Position);
+            var newCoors = new MyPoint() { X = Position.X, Y = Position.Y };
 
             switch (key)
             {
@@ -208,15 +209,21 @@ namespace the_game_wpf
             }
 
             GameObject inPathObject = MyMap.GetByCoords(newCoors);
-
-            if (inPathObject is WallObject)
-                return false;
-
-            if (inPathObject is CoinObject)
-                Controller.ChangeState(false);
-
-            Move(newCoors);
-
+            switch (inPathObject)
+            {
+                case WallObject _:
+                    return false;
+                case CoinObject _:
+                    inPathObject.Move(new MyPoint() { X = -100 });
+                    break;
+                case ExitObject _:
+                    Controller.ShowBox("Вы выиграли!", true);
+                    break;
+                default:
+                    Move(newCoors);
+                    break;
+            }
+            
             return true;
         }
     }

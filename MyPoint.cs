@@ -12,11 +12,6 @@ namespace the_game_wpf
         public int X;
         public int Y;
 
-        public MyPoint() { }
-
-        public MyPoint(MyPoint point) { X = point.X; Y = point.Y; }
-
-        public MyPoint(int tX, int tY) { X = tX; Y = tY; }
         public string String()
         {
             return string.Format("(X:{0}; Y:{1})", X, Y);
@@ -46,7 +41,7 @@ namespace the_game_wpf
                 {
                     for (int y = zone * -1; y <= zoneY; y++)
                     {
-                        MyPoint findPoint = new MyPoint(X + x, Y + y);
+                        MyPoint findPoint = new MyPoint() { X = X + x, Y = Y + y };
 
                         // срезать диагональные углы
                         if (removeDiag && x == -zone && y == -zone || x == -zone && y == zone ||
@@ -55,7 +50,6 @@ namespace the_game_wpf
 
                         collection.Add(findPoint);
                     }
-
                     zoneY = zone;
                 }
 
