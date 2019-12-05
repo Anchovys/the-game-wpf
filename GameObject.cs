@@ -62,7 +62,7 @@ namespace the_game_wpf
         public Rectangle MakeImage(string path)
         {
             // полный путь. папка со спрайтами указывается через настройки
-            string fullpath = System.IO.Path.Combine(Controller.Options.SpritesPath, path) + ".png";
+            string fullpath = System.IO.Path.Combine("assets", path) + ".png";
 
             // нужно проверить, есть ли файл по пути
             if (!System.IO.File.Exists(fullpath))
@@ -234,7 +234,6 @@ namespace the_game_wpf
         public HeroObject(MyPoint startPosition)
         {
             Position = startPosition;
-            //Figure = MakeRectangle(Brushes.PaleGreen);
             Figure = MakeImage(GetType().Name);
         }
 

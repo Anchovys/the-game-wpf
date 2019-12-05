@@ -111,6 +111,5 @@ namespace the_game_wpf
                 if (exit) Environment.Exit(0);
             });
         }
-
     }
 }
