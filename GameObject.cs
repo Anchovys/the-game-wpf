@@ -191,7 +191,7 @@ namespace the_game_wpf
             {
                 GameObject tObject = MyMap.GetByCoords(item);
 
-                if (tObject is HeroObject)
+                if (tObject is HeroObject && !MyMap.WallCheck(Position, item))
                 {
                     Controller.ShowBox("Вас сожрали монстры — с кем не бывает?");
                     Controller.Stop();

@@ -199,6 +199,29 @@ namespace the_game_wpf
         }
 
         /// <summary>
+        /// Проверить что между координатами имеется стена
+        /// </summary>
+        /// <param name="pos1">Первая позиция, например игрока</param>
+        /// <param name="pos2">Вторая позиция, например монстра</param>
+        /// <remarks>Работает только на расстоянии 2 исправно</remarks>
+        /// <returns>Есть ли стена / булево</returns>
+        public bool WallCheck(MyPoint pos1, MyPoint pos2)
+        {
+            MyPoint newCords = new MyPoint();
+
+            if (pos1.X > pos2.X)
+                newCords.X = pos2.X + 1;
+            else newCords.X = pos2.X - 1;
+
+            if (pos1.Y > pos2.Y)
+                newCords.Y = pos2.Y + 1;
+            else newCords.Y = pos2.Y - 1;
+
+            return GetByCoords(newCords) is WallObject;
+        }
+
+
+        /// <summary>
         /// Находит координаты ближайшего обьекта
         /// </summary>
         /// <param name="mapObjects">Тип обьекта, который нужно найти</param>
