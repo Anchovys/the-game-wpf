@@ -14,7 +14,7 @@ namespace the_game_wpf
         public int Height;
 
         private readonly Dictionary<MyPoint, GameObject> GameObjects = new Dictionary<MyPoint, GameObject>();
-        private Dictionary<MyPoint, GameObject> Changes = new Dictionary<MyPoint, GameObject>();
+        private readonly Dictionary<MyPoint, GameObject> Changes = new Dictionary<MyPoint, GameObject>();
 		private readonly Dispatcher Dispatcher;
 
         public bool LoadStatus;
@@ -31,7 +31,6 @@ namespace the_game_wpf
 
         public Map(string textFile, GameController controller) 
 		{
-
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
@@ -96,7 +95,7 @@ namespace the_game_wpf
 
         }
 
-        int hash;
+        int hash; // последний хеш (для сверки)
         public void Drawing(Canvas parent, bool reset = false) 
 		{
             Stopwatch sw = new Stopwatch();

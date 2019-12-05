@@ -1,20 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
 namespace the_game_wpf
 {
     public class Item
     {
-        public const int BlockSizeInPixelsX = 10; // размеры блока в пикселях по X
-        public const int BlockSizeInPixelsY = 10; // размеры блока в пикселях по Y
+        // TODO: Идея - размеры блока в зависимости от размера карты
+        public const int BlockSizeInPixelsX = 16; // размеры блока в пикселях по X
+        public const int BlockSizeInPixelsY = 16; // размеры блока в пикселях по Y
 
         public MyPoint GetAbsolutePositionByCoordinates(MyPoint point)
         {
@@ -26,20 +23,43 @@ namespace the_game_wpf
         }
         public Rectangle MakeRectangle(Brush color)
         {
-            Rectangle temporaryRectangle = new Rectangle();
-            temporaryRectangle.Width = BlockSizeInPixelsX;
-            temporaryRectangle.Height = BlockSizeInPixelsY;
-            temporaryRectangle.Fill = color;
+            Rectangle temporaryRectangle = new Rectangle
+            {
+                Width = BlockSizeInPixelsX,
+                Height = BlockSizeInPixelsY,
+                Fill = color
+            };
             return temporaryRectangle;
         }
         public Ellipse MakeCurcle(Brush color)
         {
-            Ellipse temporaryRectangle = new Ellipse();
-            temporaryRectangle.Width = BlockSizeInPixelsX;
-            temporaryRectangle.Height = BlockSizeInPixelsY;
-            temporaryRectangle.Fill = color;
+            Ellipse temporaryRectangle = new Ellipse
+            {
+                Width = BlockSizeInPixelsX,
+                Height = BlockSizeInPixelsY,
+                Fill = color
+            };
             return temporaryRectangle;
         }
+
+        public Rectangle MakeImage(string path)
+        {
+            string fullpath = System.IO.Path.Combine("Assets", path) + ".png";
+
+            if (!System.IO.File.Exists(fullpath))
+                throw new Exception("ERROR :: NOT FOUND IMAGE ON PATH: " + fullpath);
+
+            Rectangle image = new Rectangle
+            {
+                Width = BlockSizeInPixelsX,
+                Height = BlockSizeInPixelsY,
+                Fill = new ImageBrush { ImageSource = new BitmapImage(new Uri(fullpath, UriKind.Relative)) },
+                Stretch = Stretch.Fill
+            };
+
+            return image;
+        }
+
     }
     public class GameObject : Item
     {
@@ -68,7 +88,7 @@ namespace the_game_wpf
         public WallObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeRectangle(Brushes.DarkBlue);
+            Figure = MakeImage(GetType().Name);
         }
     }
     public class CoinObject : GameObject
@@ -77,7 +97,7 @@ namespace the_game_wpf
         public CoinObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeCurcle(Brushes.Gold);
+            Figure = MakeImage(GetType().Name);
         }
     }
     public class ExitObject : GameObject
@@ -86,7 +106,7 @@ namespace the_game_wpf
         public ExitObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeRectangle(Brushes.LightGray);
+            Figure = MakeImage(GetType().Name);
         }
     }
     public class EnemyObject : GameObject
@@ -100,7 +120,7 @@ namespace the_game_wpf
         public EnemyObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeRectangle(Brushes.Black);
+            Figure = MakeImage(GetType().Name);
         }
         /// <summary>
         /// Движение монстра к какому-либо обьекту
@@ -183,7 +203,8 @@ namespace the_game_wpf
         public HeroObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeRectangle(Brushes.PaleGreen);
+            //Figure = MakeRectangle(Brushes.PaleGreen);
+            Figure = MakeImage(GetType().Name);
         }
         public bool Move(Key key)
         {

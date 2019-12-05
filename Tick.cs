@@ -7,7 +7,7 @@
         int CurTick;                // текущий тик, временное значение
         bool Starts;                // определяет состояние цикла while
         public bool InPause;        // находится ли цикл сейчас на паузе
-        public int Iteration = 0;   // текущая итерация
+        public int Iteration = 0;   // текущая итерация (число вызовов Update)
 
         GameController Controller;
 

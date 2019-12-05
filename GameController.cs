@@ -70,7 +70,7 @@ namespace the_game_wpf
         }
 
         /// <summary>
-        /// При остановке будет вызван этот метод
+        /// Метод завершения работы контроллера
         /// </summary>
         public void Stop() 
         {
@@ -95,7 +95,7 @@ namespace the_game_wpf
         {
             Console.WriteLine("==== new frame ====");
             Stopwatch sw = new Stopwatch();
-            sw.Start();
+            sw.Stop(); sw.Start();
 
             if (LastInputKey != -1) // какая-то кнопка была зажата
             {
@@ -104,7 +104,7 @@ namespace the_game_wpf
             }
 
             // поиск монстров
-            // СЛИШКОМ МЕДЛЕННО!
+            // СЛИШКОМ МЕДЛЕННО ( > 5 ms)!
             foreach (var item in MainMap.FindObjects(new EnemyObject()))
             {
                 EnemyObject enemy = item as EnemyObject;
@@ -114,10 +114,7 @@ namespace the_game_wpf
 
             // отрисовка (на любой первой итерации - очищаем поле)
             MainMap.Drawing(GameCanvas, Ticks.Iteration == 1);
-
             Console.WriteLine("Frame end -> ~{0} мс", sw.ElapsedMilliseconds, Ticks.Iteration);
-            sw.Stop();
-
         }
 
         public void ShowBox(string text, bool exit = false)
