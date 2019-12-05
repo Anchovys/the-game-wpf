@@ -50,13 +50,13 @@ namespace the_game_wpf
         
         public void Destroy()
         {
-            Console.WriteLine("--> Обьект {0} был удален с карты ({1})", GetType().Name, Position.String());
+            Console.WriteLine("--> Obj {0} has breen removed from map ({1})", GetType().Name, Position.String());
             MyMap.PlaceObject(Position, null, true);
         }
 
         public void Move(MyPoint newPosition) 
         {
-            Console.WriteLine("--> Обьект {0} был перемещен ({1} --> {2})", GetType().Name, Position.String(), newPosition.String());
+            Console.WriteLine("--> Obj {0} moved to ({1} --> {2})", GetType().Name, Position.String(), newPosition.String());
             Destroy(); // уничтожим старый обьект
             Position = newPosition;  // поменяем позицию текущего
             MyMap.PlaceObject(newPosition, this, true); // запишем в новую
@@ -64,7 +64,7 @@ namespace the_game_wpf
     }
     public class WallObject : GameObject
     {
-        public const char InitChar = '#';
+        public const char InitChar = '#';   // символ, которым изображен этот обьект на карте
         public WallObject(MyPoint startPosition)
         {
             Position = startPosition;
@@ -73,7 +73,7 @@ namespace the_game_wpf
     }
     public class CoinObject : GameObject
     {
-        public const char InitChar = '0';
+        public const char InitChar = '0';   // символ, которым изображен этот обьект на карте
         public CoinObject(MyPoint startPosition)
         {
             Position = startPosition;
@@ -82,7 +82,7 @@ namespace the_game_wpf
     }
     public class ExitObject : GameObject
     {
-        public const char InitChar = '=';
+        public const char InitChar = '=';   // символ, которым изображен этот обьект на карте
         public ExitObject(MyPoint startPosition)
         {
             Position = startPosition;
@@ -94,8 +94,8 @@ namespace the_game_wpf
         public byte AttackZoneJumping = 2;  // область атаки прыжка
         public byte AttackZone = 1;         // область атаки ближний бой
         public byte ViewZone = 10;          // область видимости
-        public GameObject Target;            // обьект, который выбран для преследования
-        public const char InitChar = '?';
+        public GameObject Target;           // обьект, который выбран для преследования
+        public const char InitChar = '?';   // символ, которым изображен этот обьект на карте
         public EnemyObject() { }
         public EnemyObject(MyPoint startPosition)
         {
@@ -145,7 +145,10 @@ namespace the_game_wpf
                 GameObject tObject = MyMap.GetByCoords(item);
 
                 if (tObject is HeroObject)
-                    Controller.ShowBox("Вас сожрали монстры — с кем не бывает?", true);
+                {
+                    Controller.ShowBox("Вас сожрали монстры — с кем не бывает?");
+                    Controller.Stop();
+                }
             }
             foreach (var item in Position.GetNearPoints(AttackZone, false))
             {
@@ -163,7 +166,7 @@ namespace the_game_wpf
             if (Target != null)
                 MoveToTarget(Target.Position);
 
-            // найти самый ближайший обьект игрок или монстр
+            // найти самый ближайший обьект (игрока или монстра)
             GameObject localObject = MyMap.FindNearlyObject(
                 new GameObject[] { new EnemyObject(), new HeroObject() },
                 Position, Position.GetNearPoints(ViewZone, false));
@@ -175,7 +178,7 @@ namespace the_game_wpf
     }
     public class HeroObject : GameObject
     {
-        public const char InitChar = '+';
+        public const char InitChar = '+';   // символ, которым изображен этот обьект на карте
         public HeroObject() { }
         public HeroObject(MyPoint startPosition)
         {
@@ -217,13 +220,11 @@ namespace the_game_wpf
                     inPathObject.Move(new MyPoint() { X = -100 });
                     break;
                 case ExitObject _:
-                    Controller.ShowBox("Вы выиграли!", true);
-                    break;
-                default:
-                    Move(newCoors);
+                    Controller.ShowBox("Вы выиграли!");
+                    Controller.Stop();
                     break;
             }
-            
+            Move(newCoors);
             return true;
         }
     }

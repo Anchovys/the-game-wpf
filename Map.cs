@@ -17,6 +17,8 @@ namespace the_game_wpf
         private Dictionary<MyPoint, GameObject> Changes = new Dictionary<MyPoint, GameObject>();
 		private readonly Dispatcher Dispatcher;
 
+        public bool LoadStatus;
+
         public new int GetHashCode()
         {
             StringBuilder str = new StringBuilder();
@@ -29,22 +31,24 @@ namespace the_game_wpf
 
         public Map(string textFile, GameController controller) 
 		{
+
             Stopwatch sw = new Stopwatch();
             sw.Start();
+
+            if (!File.Exists(textFile))
+                return;
+
+            var lines = File.ReadAllLines(textFile);
+
+            if (lines.Length == 0 || lines[0].Length == 0)
+                return; // при ошибке
+
+            Height = lines.Length;
+            Width = lines[0].Length;
+
             Dispatcher = controller.Window.Dispatcher;
             Dispatcher.Invoke(() =>
             {
-                if (!File.Exists(textFile))
-                    return;
-
-                var lines = File.ReadAllLines(textFile);
-
-                if (lines.Length == 0 || lines[0].Length == 0)
-                    return; // при ошибке
-
-                Height = lines.Length;
-                Width = lines[0].Length;
-
                 try
                 {
                     for (int x = 0; x < Width; x++)
@@ -82,15 +86,18 @@ namespace the_game_wpf
                 }
                 catch (Exception e)
                 {
-                    throw new Exception("Ошибка при загрузке карты! {0}", e);
+                    Console.WriteLine(e);
                 }
-                Console.WriteLine("Чтение карты завершено за {0} мс", sw.ElapsedMilliseconds);
+                Console.WriteLine("Map file read success - {0} ms", sw.ElapsedMilliseconds);
             });
+
             sw.Stop();
+            LoadStatus = true;
+
         }
 
         int hash;
-        public void Drawing(Canvas parent) 
+        public void Drawing(Canvas parent, bool reset = false) 
 		{
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -102,6 +109,13 @@ namespace the_game_wpf
 
                 Dispatcher.Invoke(() =>
                 {
+                    // если указано, что нужно сбросить поле, сбрасываем
+                    if (reset)
+                    {
+                        Console.WriteLine("******************** CLEANING");
+                        parent.Children.Clear();
+                    }
+
                     foreach (var item in Changes)
                     {
                         GameObject @object = item.Value;
@@ -120,8 +134,14 @@ namespace the_game_wpf
                         Canvas.SetTop(@object.Figure, position.Y);
                     }
                 });
-                Console.WriteLine("Отрисовка карты завершена за {0} мс", sw.ElapsedMilliseconds);
             }
+
+            Console.WriteLine("Map drawing success - {0} ms\nInfo: [changes: {1} / {2}];",
+                sw.ElapsedMilliseconds,
+                Changes.Count,
+                GameObjects.Count
+            );
+
             sw.Stop();
             Changes.Clear();
         }

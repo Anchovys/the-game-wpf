@@ -12,3 +12,6 @@
 \\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\obj\Debug\the-game-wpf.csproj.GenerateResource.cache
 \\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\obj\Debug\the-game-wpf.exe
 \\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\obj\Debug\the-game-wpf.pdb
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\bin\Debug\OptionsLoader.dll
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\bin\Debug\OptionsLoader.pdb
+\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\obj\Debug\the-game-wpf.csproj.CopyComplete

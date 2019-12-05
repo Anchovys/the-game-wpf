@@ -14,7 +14,12 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Настройки">
-                <Grid Background="#FFE5E5E5" Margin="0,0,0,-4"/>
+                <Grid Background="#FFE5E5E5" Margin="0,0,0,-4">
+                    <Label Content="Изменить настройки игры вы сможете в файле конфигурации. Или воспользоваться редактором, расположенным ниже." HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="766"/>
+                    <Button x:Name="LoadConfig" Content="Открыть" HorizontalAlignment="Left" Margin="621,75,0,0" VerticalAlignment="Top" Width="75" Click="LoadConfig_Click"/>
+                    <TextBox x:Name="ConfigEditor" IsEnabled="False" HorizontalAlignment="Left" Height="265" Margin="10,100,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="766"/>
+                    <Button x:Name="SaveConfig" IsEnabled="False" Content="Сохранить" HorizontalAlignment="Left" Margin="701,75,0,0" VerticalAlignment="Top" Width="75" Click="SaveConfig_Click"/>
+                </Grid>
             </TabItem>
         </TabControl>
         <Button x:Name="StartOrPause" Content="Начать" Margin="0,5,23,0" Click="StartOrPause_Click" RenderTransformOrigin="0.96,0.393" HorizontalAlignment="Right" Width="75" Height="28" VerticalAlignment="Top"/>

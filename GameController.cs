@@ -22,20 +22,43 @@ namespace the_game_wpf
     {
         private readonly Map MainMap;
         private readonly HeroObject HeroObject;
-        public readonly MainWindow Window;
+        public  readonly MainWindow Window;
+        public  readonly Stopwatch MainTimer;
         private readonly Canvas GameCanvas;
-        private readonly Tick tick;
+        private readonly Tick Ticks;
+        public  readonly GameOptions Options;
 
         public int LastInputKey = -1;
 
         public GameController(MainWindow window)
         {
-            tick = new Tick(this);
+            Console.WriteLine("GameController init With options: ");
+
+            Options = new GameOptions();
+
+            if (!Options.Pop(Options))
+            {
+                Options = new GameOptions();
+                Options.Push();
+            }
+
+            foreach (var f in Options.GetType().GetFields())
+                Console.WriteLine("===> Name: {0} Value: {1}", f.Name, f.GetValue(Options));
+
+
+            MainTimer = new Stopwatch();
+            MainTimer.Start();
+
+            Ticks = new Tick(this, Options.TickPerFrame, Options.TickSpeed);
             Window = window;
             GameCanvas = Window.GameField;
 
-            MainMap = new Map("map.txt", this);
-            HeroObject = (HeroObject)MainMap.FindObject(new HeroObject());
+            MainMap = new Map(Options.MapFilePath, this);
+
+            if (!MainMap.LoadStatus)
+                throw new Exception("Map is not loaded!");
+
+            HeroObject = MainMap.FindObject(new HeroObject()) as HeroObject;
         }
 
         /// <summary>
@@ -43,7 +66,26 @@ namespace the_game_wpf
         /// </summary>
         public void Start()
         {
-            tick.Run();
+            Ticks.Run();
+        }
+
+        /// <summary>
+        /// При остановке будет вызван этот метод
+        /// </summary>
+        public void Stop() 
+        {
+            Ticks.Stop();
+        }
+
+        /// <summary>
+        /// Метод для установки текущего состояния паузы
+        /// </summary>
+        /// <returns>Состояние паузы (после изменения)</returns>
+        public bool Pause()
+        {
+            Ticks.InPause = !Ticks.InPause;
+            Console.WriteLine("State changed.. Current -> {0}", Ticks.InPause);
+            return Ticks.InPause;
         }
 
         /// <summary>
@@ -51,7 +93,7 @@ namespace the_game_wpf
         /// </summary>
         public void Update()
         {
-            Console.WriteLine("==== начинаю новый кадр ====");
+            Console.WriteLine("==== new frame ====");
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
@@ -65,22 +107,17 @@ namespace the_game_wpf
             // СЛИШКОМ МЕДЛЕННО!
             foreach (var item in MainMap.FindObjects(new EnemyObject()))
             {
-                EnemyObject enemy = (EnemyObject)item;
+                EnemyObject enemy = item as EnemyObject;
                 enemy.Move();
                 enemy.CheckCollision();
             }
 
-            MainMap.Drawing(GameCanvas);
+            // отрисовка (на любой первой итерации - очищаем поле)
+            MainMap.Drawing(GameCanvas, Ticks.Iteration == 1);
 
-            Console.WriteLine("Кадр был закончен за {0} мс", sw.ElapsedMilliseconds);
+            Console.WriteLine("Frame end -> ~{0} мс", sw.ElapsedMilliseconds, Ticks.Iteration);
             sw.Stop();
 
-        }
-
-        public void ChangeState(bool to) 
-        {
-            Console.WriteLine("Состояние " + to);
-            tick.InPause = to;
         }
 
         public void ShowBox(string text, bool exit = false)
@@ -89,7 +126,6 @@ namespace the_game_wpf
             Window.Dispatcher.Invoke(() =>
             {
                 MessageBox.Show(text, "Внимание");
-
                 if (exit) Environment.Exit(0);
             });
         }
