@@ -1,32 +1,19 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Windows.Threading;
 using System.Diagnostics;
 
 namespace the_game_wpf
 {
     public class GameController
     {
-        private readonly Map MainMap;
-        private readonly HeroObject HeroObject;
-        public  readonly MainWindow Window;
-        public  readonly Stopwatch MainTimer;
-        private readonly Canvas GameCanvas;
-        private readonly Tick Ticks;
-        public  readonly GameOptions Options;
+        private readonly Map MainMap;               // игровая карта
+        private readonly HeroObject HeroObject;     // игрок (чтобы не искать каждый кадр)
+        public  readonly MainWindow Window;         // окно основного потока - нужно для изменения
+        private readonly Canvas GameCanvas;         // игровое поле, на котором будут распологаться обьекты
+        private readonly Tick Ticks;                // управление тиками
+        public  readonly GameOptions Options;       // загруженные настройки игры
 
         public int LastInputKey = -1;
 
@@ -34,25 +21,23 @@ namespace the_game_wpf
         {
             Console.WriteLine("GameController init With options: ");
 
-            Options = new GameOptions();
-
-            if (!Options.Pop(Options))
+            // работаем с настройками
+            Options = new GameOptions();    // сначала дефолтные
+            if (!Options.Pop(Options))      // пытаемся загрузить из файла
             {
-                Options = new GameOptions();
+                // сохраняем дефолтные настройки в файл
+                Options = new GameOptions();  
                 Options.Push();
             }
 
+            // вывод настроек на экран
             foreach (var f in Options.GetType().GetFields())
                 Console.WriteLine("===> Name: {0} Value: {1}", f.Name, f.GetValue(Options));
 
-
-            MainTimer = new Stopwatch();
-            MainTimer.Start();
-
-            Ticks = new Tick(this, Options.TickPerFrame, Options.TickSpeed);
             Window = window;
             GameCanvas = Window.GameField;
 
+            Ticks = new Tick(this, Options.TickSpeed, Options.TickPerFrame);
             MainMap = new Map(Options.MapFilePath, this);
 
             if (!MainMap.LoadStatus)

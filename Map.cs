@@ -19,6 +19,9 @@ namespace the_game_wpf
 
         public bool LoadStatus;
 
+        /// <summary>
+        /// Переписанный метод для хеш-кода
+        /// </summary>
         public new int GetHashCode()
         {
             StringBuilder str = new StringBuilder();
@@ -34,9 +37,11 @@ namespace the_game_wpf
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
+            // необходимо проверить, есть ли карта
             if (!File.Exists(textFile))
-                return;
+                return; // при ошибке
 
+            // читаем карту
             var lines = File.ReadAllLines(textFile);
 
             if (lines.Length == 0 || lines[0].Length == 0)
@@ -99,7 +104,7 @@ namespace the_game_wpf
         public void Drawing(Canvas parent, bool reset = false) 
 		{
             Stopwatch sw = new Stopwatch();
-            sw.Start();
+            sw.Stop(); sw.Start();
 
             // оптимизация #0 - проверка на изменение карты по хешу
             if (hash != GetHashCode())
@@ -109,26 +114,28 @@ namespace the_game_wpf
                 Dispatcher.Invoke(() =>
                 {
                     // если указано, что нужно сбросить поле, сбрасываем
-                    if (reset)
-                    {
-                        Console.WriteLine("******************** CLEANING");
-                        parent.Children.Clear();
-                    }
+                    if (reset) parent.Children.Clear();
 
+                    // перебор всех "измененных обьектов"
                     foreach (var item in Changes)
                     {
-                        GameObject @object = item.Value;
+                        GameObject @object = item.Value; // что за обьект (UI ELEMENT)
 
-                        if (@object == null)
-                            continue;
+                        // его нет
+                        if (@object == null) continue;
 
+                        // удалим старую фигуру если она есть
+                        // для того, чтобы не возникало проблем с клонами
                         if (GameObjects.ContainsValue(@object))
                             parent.Children.Remove(@object.Figure);
 
+                        // добавим новую
 						parent.Children.Add(@object.Figure);
 
+                        // получаем расположение в пикселях по координатам
                         MyPoint position = @object.GetAbsolutePositionByCoordinates(@object.Position);
 
+                        // распологаем обьект
                         Canvas.SetLeft(@object.Figure, position.X);
                         Canvas.SetTop(@object.Figure, position.Y);
                     }
@@ -136,15 +143,16 @@ namespace the_game_wpf
             }
 
             Console.WriteLine("Map drawing success - {0} ms\nInfo: [changes: {1} / {2}];",
-                sw.ElapsedMilliseconds,
-                Changes.Count,
-                GameObjects.Count
-            );
+                sw.ElapsedMilliseconds, Changes.Count, GameObjects.Count );
 
-            sw.Stop();
             Changes.Clear();
         }
 
+        /// <summary>
+        /// Получить обьект по координатам
+        /// </summary>
+        /// <param name="cords">Координаты</param>
+        /// <returns>Обьект или null</returns>
         public GameObject GetByCoords(MyPoint cords) 
 		{
             if (!GameObjects.ContainsKey(cords))
@@ -219,6 +227,13 @@ namespace the_game_wpf
             return result;
         }
 
+        /// <summary>
+        /// Разместить обьект на карте
+        /// </summary>
+        /// <param name="cords">Координаты размещения</param>
+        /// <param name="gameObject">Что за обьект</param>
+        /// <param name="replace">Заменять обьект если на этой позиции уже есть обьект?</param>
+        /// <returns>Вернет результат работы</returns>
         public bool PlaceObject(MyPoint cords, GameObject gameObject, bool replace = false)
         {
             if (Changes.ContainsKey(cords))

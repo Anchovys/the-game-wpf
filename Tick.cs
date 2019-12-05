@@ -15,7 +15,7 @@
         {
             Controller = controller;
             TickSpeed = speed;
-            CurTick = rate;
+            TickRate = rate;
         }
 
         public void Run()

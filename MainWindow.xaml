@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:the_game_wpf"
         mc:Ignorable="d"
-        Title="MainWindow" Height="592.975" Width="894" ResizeMode="NoResize">
+        Title="The Game" Height="592.975" Width="894" ResizeMode="NoResize">
     <Grid KeyDown="Grid_KeyDown">
         <TabControl HorizontalAlignment="Left" Height="521" Margin="10,33,0,0" VerticalAlignment="Top" Width="868">
             <TabItem Header="Игра">

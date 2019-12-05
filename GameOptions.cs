@@ -11,16 +11,11 @@ namespace the_game_wpf
     public class GameOptions
     {
         public static readonly string NormalConfigFile = "conf.cfg";
-        public int TickSpeed = 30;
-        public int TickPerFrame = 10;
-
-        public string MapFilePath = "map.txt";
-        public string SpritesPath = "assets";
-
-        //public GameOptions Clone()
-        //{
-        //    return (GameOptions)MemberwiseClone();
-        //}
+        public int TickSpeed = 30;                  // сколько тиков должно пройти, чтобы они обнулились и начали считаться заново
+        public int TickPerFrame = 10;               // сколько мс длится 1 тик
+        public string Version = "REV 09";           // текущая версия
+        public string MapFilePath = "map.txt";      // путь до папки
+        public string SpritesPath = "Assets";       // путь до спрайтов
 
         public bool Push()
         {
