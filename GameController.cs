@@ -82,26 +82,38 @@ namespace the_game_wpf
             Stopwatch sw = new Stopwatch();
             sw.Stop(); sw.Start();
 
-            if (deltatime == 1)
+            if (deltatime == 1 || deltatime == Ticks.TickRate / 2 || deltatime == Ticks.TickRate / 3)
             {
-                // поиск монстров
-                // СЛИШКОМ МЕДЛЕННО ( > 5 ms)!
-                foreach (var item in MainMap.FindObjects(new EnemyObject()))
+
+                foreach (var item in MainMap.FindObjects(new BulletObject()))
                 {
-                    EnemyObject enemy = item as EnemyObject;
+                    BulletObject enemy = item as BulletObject;
                     enemy.Move();
-                    enemy.CheckCollision();
+                }
+
+                if (deltatime == 1 || deltatime == Ticks.TickRate / 2)
+                {
+                    if (LastInputKey != -1) // какая-то кнопка была зажата
+                    {
+                        HeroObject.Move((Key)LastInputKey); // передаем управление игроку
+                        LastInputKey = -1; // сбрасываем кнопку
+                    }
+
+                    if (deltatime == 1)
+                    {
+                        // поиск монстров
+                        // СЛИШКОМ МЕДЛЕННО ( > 5 ms)!
+                        foreach (var item in MainMap.FindObjects(new EnemyObject()))
+                        {
+                            EnemyObject enemy = item as EnemyObject;
+                            enemy.Move();
+                            enemy.CheckCollision();
+                        }
+                    }
+
                 }
             }
 
-            if (deltatime == 1 || deltatime == Ticks.TickRate / 2)
-            {
-                if (LastInputKey != -1) // какая-то кнопка была зажата
-                {
-                    HeroObject.Move((Key)LastInputKey); // передаем управление игроку
-                    LastInputKey = -1; // сбрасываем кнопку
-                }
-            }
 
             // отрисовка (на любой первой итерации - очищаем поле)
             MainMap.Drawing(GameCanvas, Ticks.Iteration == 0);

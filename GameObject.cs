@@ -92,7 +92,7 @@ namespace the_game_wpf
         /// </summary>
         public void Destroy()
         {
-            Console.WriteLine("--> Obj {0} has breen removed from map ({1})", GetType().Name, Position.String());
+            Console.WriteLine("--> Obj {0} has breen removed from map ({1})", GetType().Name, Position.ToString());
             MyMap.PlaceObject(Position, null, true);
         }
 
@@ -102,7 +102,7 @@ namespace the_game_wpf
         /// <param name="newPosition">Куда перемещать</param>
         public MyPoint Move(MyPoint newPosition) 
         {
-            Console.WriteLine("--> Obj {0} moved to ({1} --> {2})", GetType().Name, Position.String(), newPosition.String());
+            Console.WriteLine("--> Obj {0} moved to ({1} --> {2})", GetType().Name, Position.ToString(), newPosition.ToString());
             Destroy(); // уничтожим старый обьект
             Position = newPosition;  // поменяем позицию текущего
             MyMap.PlaceObject(newPosition, this, true); // запишем в новую
@@ -125,6 +125,66 @@ namespace the_game_wpf
         {
             Position = startPosition;
             Figure = MakeImage(GetType().Name);
+        }
+    }
+    public class BulletObject : GameObject
+    {
+        public const char InitChar = '.';   // символ, которым изображен этот обьект на карте
+        public bool LeftDirection = true;
+        public byte BulletHealth = 3;
+
+        public bool Freeze = false;
+        public bool Clean = false;
+
+        public BulletObject() { }
+        public BulletObject(MyPoint startPosition)
+        {
+            Position = startPosition;
+            Figure = MakeImage(GetType().Name);
+        }
+        public void Move() 
+        {
+            if (Freeze)
+            {
+                if (Clean) Destroy();
+                return;
+            }
+                
+
+            var newCoors = new MyPoint() { X = Position.X, Y = Position.Y };
+
+            if (LeftDirection) newCoors.X--;
+            else  newCoors.X++;
+
+            GameObject nextObject = MyMap.GetByCoords(newCoors);
+
+            if (BulletHealth == 0)
+            {
+                Freeze = true;
+                Clean = true;
+                return;
+            }
+
+            if (nextObject != null)
+                if (nextObject is WallObject)
+                {
+                    BulletHealth--;
+                    nextObject.Destroy();
+                }
+                else if (nextObject is HeroObject)
+                { 
+                    Controller.ShowBox("Вас убило пулей? Серьезно?");
+                    Controller.Stop();
+                }
+                else if (nextObject is CoinObject) 
+                {
+                    // меняем направление пули :D
+                    LeftDirection = !LeftDirection;
+                    return;
+                }
+                else nextObject.Destroy();
+
+            Move(newCoors);
         }
     }
     public class ExitObject : GameObject
@@ -230,6 +290,7 @@ namespace the_game_wpf
     public class HeroObject : GameObject
     {
         public const char InitChar = '+';   // символ, которым изображен этот обьект на карте
+        public bool LeftDirection = false;
         public HeroObject() { }
         public HeroObject(MyPoint startPosition)
         {
@@ -259,10 +320,29 @@ namespace the_game_wpf
                 case Key.A:
                 case Key.Left:
                     newCoors.X--;
+                    LeftDirection = true;
                     break;
                 case Key.D:
                 case Key.Right:
                     newCoors.X++;
+                    LeftDirection = false;
+                    break;
+                case Key.F:
+
+                    if (LeftDirection) newCoors.X--;
+                    else newCoors.X++;
+
+                    Controller.Window.Dispatcher.Invoke(() =>
+                    {
+                        MyMap.PlaceObject(newCoors, 
+                            new BulletObject(new MyPoint() { X = newCoors.X, Y = newCoors.Y }) {
+                                LeftDirection = LeftDirection, 
+                                MyMap = MyMap,
+                                Controller = Controller 
+                            });
+                    });
+
+                    return true;
                     break;
                 default:
                     return false;
@@ -274,7 +354,7 @@ namespace the_game_wpf
                 case WallObject _:
                     return false;
                 case CoinObject _:
-                    inPathObject.Move(new MyPoint() { X = -100 });
+                    inPathObject.Destroy();
                     break;
                 case ExitObject _:
                     Controller.ShowBox("Вы выиграли!");

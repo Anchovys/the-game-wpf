@@ -2,7 +2,7 @@
 {
     class Tick
     {
-        public readonly int TickSpeed = 30;         // с какой скоростью увеличивать тики
+        public readonly int TickSpeed = 50;         // с какой скоростью увеличивать тики
         public readonly int TickRate = 10;          // через какое количество тиков их нужно сбросить
         int CurTick;                // текущий тик, временное значение
         bool Starts;                // определяет состояние цикла while

@@ -12,7 +12,7 @@ namespace the_game_wpf
         public int X;
         public int Y;
 
-        public string String()
+        public new string ToString()
         {
             return string.Format("(X:{0}; Y:{1})", X, Y);
         }

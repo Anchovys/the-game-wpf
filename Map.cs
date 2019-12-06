@@ -5,6 +5,7 @@ using System.IO;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using System.Diagnostics;
+using System.Windows;
 
 namespace the_game_wpf
 {
@@ -15,7 +16,9 @@ namespace the_game_wpf
 
         private readonly Dictionary<MyPoint, GameObject> GameObjects = new Dictionary<MyPoint, GameObject>();
         private readonly Dictionary<MyPoint, GameObject> Changes = new Dictionary<MyPoint, GameObject>();
-		private readonly Dispatcher Dispatcher;
+        private readonly List<UIElement> ElementsForRemove = new List<UIElement>();
+
+        private readonly Dispatcher Dispatcher;
 
         public bool LoadStatus;
 
@@ -27,7 +30,10 @@ namespace the_game_wpf
             StringBuilder str = new StringBuilder();
 
             foreach (var item in GameObjects)
-                str.Append("|" + item.Key.String() + item.Value.GetType().FullName);
+            {
+                string name = item.Value == null ? "null" : item.Value.GetType().FullName;
+                str.Append("|" + item.Key.ToString() + name);
+            }
 
             return str.ToString().GetHashCode();
         }
@@ -77,6 +83,9 @@ namespace the_game_wpf
                                 case EnemyObject.InitChar:
                                     gameObject = new EnemyObject(new MyPoint() { X = x, Y = y });
                                     break;
+                                case BulletObject.InitChar:
+                                    gameObject = new BulletObject(new MyPoint() { X = x, Y = y });
+                                    break;
                             }
 
                             if (gameObject != null)
@@ -100,6 +109,16 @@ namespace the_game_wpf
 
         }
 
+        /// <summary>
+        /// Проверяет точку на лимиты в карте
+        /// </summary>
+        /// <param name="point">Точка</param>
+        /// <returns>Принадлежит ли точка карте</returns>
+        private bool CheckLimits(Point point)
+        {
+            return point.X > 0 && point.X < Width && point.Y > 0 && point.Y < Height;
+        }
+
         int hash; // последний хеш (для сверки)
         public void Drawing(Canvas parent, bool reset = false) 
 		{
@@ -116,13 +135,22 @@ namespace the_game_wpf
                     // если указано, что нужно сбросить поле, сбрасываем
                     if (reset) parent.Children.Clear();
 
+                    foreach (var item in ElementsForRemove)
+                    {
+                        parent.Children.Remove(item);
+                    }
+
                     // перебор всех "измененных обьектов"
                     foreach (var item in Changes)
                     {
                         GameObject @object = item.Value; // что за обьект (UI ELEMENT)
 
-                        // его нет
-                        if (@object == null) continue;
+                        if (@object == null) 
+                        {
+                            if(item.Key != null)
+                                parent.Children.Remove(GameObjects[item.Key].Figure);
+                            continue;
+                        }
 
                         // удалим старую фигуру если она есть
                         // для того, чтобы не возникало проблем с клонами
@@ -142,10 +170,11 @@ namespace the_game_wpf
                 });
             }
 
-            Console.WriteLine("Map drawing success - {0} ms\nInfo: [changes: {1} / {2}];",
-                sw.ElapsedMilliseconds, Changes.Count, GameObjects.Count );
+            Console.WriteLine("Map drawing success - {0} ms\nInfo: [changes: {1} / {2}]; {3}",
+                sw.ElapsedMilliseconds, Changes.Count, GameObjects.Count, ElementsForRemove.Count);
 
             Changes.Clear();
+            ElementsForRemove.Clear();
         }
 
         /// <summary>
@@ -259,23 +288,37 @@ namespace the_game_wpf
         /// <returns>Вернет результат работы</returns>
         public bool PlaceObject(MyPoint cords, GameObject gameObject, bool replace = false)
         {
-            if (Changes.ContainsKey(cords))
-                Changes.Remove(cords);
-            Changes.Add(cords, gameObject);
 
-            if (!GameObjects.ContainsKey(cords)) // без замены обьекта
+            if (gameObject == null && replace)
             {
-                GameObjects.Add(cords, gameObject);
+                if (!GameObjects.ContainsKey(cords))
+                    return false;
+
+                ElementsForRemove.Add(GameObjects[cords].Figure);
+                GameObjects.Remove(cords);
+                Changes.Remove(cords);
+
                 return true;
             }
-            else if (replace) // заменять обьект, даже если там что-то есть
+            else
             {
-                if (gameObject != null) 
-					GameObjects[cords] = gameObject;
-                else GameObjects.Remove(cords);
-                return true;
+                if (Changes.ContainsKey(cords))
+                    Changes.Remove(cords);
+
+                Changes.Add(cords, gameObject);
+
+                if (!GameObjects.ContainsKey(cords)) // без замены обьекта
+                {
+                    GameObjects.Add(cords, gameObject);
+                    return true;
+                }
+                else if (replace) // заменять обьект, даже если там что-то есть
+                {
+                    GameObjects[cords] = gameObject;
+                    return true;
+                }
+                return false;
             }
-            return false;
         }
     }
 }
