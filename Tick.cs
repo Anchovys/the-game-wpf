@@ -2,8 +2,8 @@
 {
     class Tick
     {
-        int TickSpeed = 10;         // с какой скоростью увеличивать тики
-        int TickRate = 30;          // через какое количество тиков их нужно сбросить
+        public readonly int TickSpeed = 30;         // с какой скоростью увеличивать тики
+        public readonly int TickRate = 10;          // через какое количество тиков их нужно сбросить
         int CurTick;                // текущий тик, временное значение
         bool Starts;                // определяет состояние цикла while
         public bool InPause;        // находится ли цикл сейчас на паузе
@@ -45,13 +45,13 @@
                 if (!InPause)
                     continue;
 
+                Controller.Update(CurTick);
+
                 if (CurTick == TickRate)
-                {
-                    Iteration++;
                     CurTick = 0;
-                    Controller.Update();
-                }
+
                 CurTick++;
+                Iteration++;
             }
         }
     }

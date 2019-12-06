@@ -76,29 +76,36 @@ namespace the_game_wpf
         /// <summary>
         /// Метод будет вызываться каждый кадр
         /// </summary>
-        public void Update()
+        public void Update(int deltatime)
         {
-            Console.WriteLine("==== new frame ====");
+            Console.WriteLine("==== new frame {0} ====", deltatime);
             Stopwatch sw = new Stopwatch();
             sw.Stop(); sw.Start();
 
-            if (LastInputKey != -1) // какая-то кнопка была зажата
+            if (deltatime == 1)
             {
-                HeroObject.Move((Key)LastInputKey); // передаем управление игроку
-                LastInputKey = -1; // сбрасываем кнопку
+                // поиск монстров
+                // СЛИШКОМ МЕДЛЕННО ( > 5 ms)!
+                foreach (var item in MainMap.FindObjects(new EnemyObject()))
+                {
+                    EnemyObject enemy = item as EnemyObject;
+                    enemy.Move();
+                    enemy.CheckCollision();
+                }
             }
 
-            // поиск монстров
-            // СЛИШКОМ МЕДЛЕННО ( > 5 ms)!
-            foreach (var item in MainMap.FindObjects(new EnemyObject()))
+            if (deltatime == 1 || deltatime == Ticks.TickRate / 2)
             {
-                EnemyObject enemy = item as EnemyObject;
-                enemy.Move();
-                enemy.CheckCollision();
+                if (LastInputKey != -1) // какая-то кнопка была зажата
+                {
+                    HeroObject.Move((Key)LastInputKey); // передаем управление игроку
+                    LastInputKey = -1; // сбрасываем кнопку
+                }
             }
 
             // отрисовка (на любой первой итерации - очищаем поле)
-            MainMap.Drawing(GameCanvas, Ticks.Iteration == 1);
+            MainMap.Drawing(GameCanvas, Ticks.Iteration == 0);
+
             Console.WriteLine("Frame end -> ~{0} мс", sw.ElapsedMilliseconds, Ticks.Iteration);
         }
 
