@@ -81,6 +81,9 @@ namespace the_game_wpf
         /// <param name="newPosition">Куда перемещать</param>
         public MyPoint Move(MyPoint newPosition, bool notForced = false)
         {
+            if (Equals(newPosition, Position))
+                return Position;
+
             if (!notForced)
             {
                 Console.WriteLine("--> Obj {0} moved to ({1} --> {2}) [FORCED]", GetType().Name, Position.ToString(), newPosition.ToString());
@@ -234,17 +237,17 @@ namespace the_game_wpf
 
                     Controller.Window.Dispatcher.Invoke(() =>
                     {
-                        var blood = new DestroyedWallObject(newCoors)
+                        var destroyedWall = new DestroyedWallObject(newCoors)
                         {
                             MyMap = MyMap,
                             Controller = Controller
                         };
 
-                        blood.Place();
+                        destroyedWall.Place();
                     });
                     return;
                 }
-                else if (nextObject is EnemyObject)
+                else if (nextObject is DemonObject)
                 {
                     nextObject.Destroy();
 
@@ -276,24 +279,25 @@ namespace the_game_wpf
             Move(newCoors, true);
         }
     }
-    public class ExitObject : GameObject
+    public class ExitDoorObject : GameObject
     {
         public const char InitChar = '=';   // символ, которым изображен этот обьект на карте
-        public ExitObject(MyPoint startPosition)
+        public ExitDoorObject() { }
+        public ExitDoorObject(MyPoint startPosition)
         {
             Position = startPosition;
             Figure = MakeImage(GetType().Name);
         }
     }
-    public class EnemyObject : GameObject
+    public class DemonObject : GameObject
     {
         public byte AttackZoneJumping = 2;  // область атаки прыжка
         public byte AttackZone = 1;         // область атаки ближний бой
         public byte ViewZone = 10;          // область видимости
         public GameObject Target;           // обьект, который выбран для преследования
         public const char InitChar = '?';   // символ, которым изображен этот обьект на карте
-        public EnemyObject() { }
-        public EnemyObject(MyPoint startPosition)
+        public DemonObject() { }
+        public DemonObject(MyPoint startPosition)
         {
             Position = startPosition;
             Figure = MakeImage(GetType().Name);
@@ -352,17 +356,34 @@ namespace the_game_wpf
             {
                 GameObject tObject = MyMap.GetByCoords(item);
 
-                if (tObject is HeroObject && !MyMap.WallCheck(Position, item))
+                if(!MyMap.WallCheck(Position, item))
                 {
-                    HeroObject heroObject = tObject as HeroObject;
-                    heroObject.Kill("Вы были погрызаны демонами.");
+                    if (tObject is HeroObject)
+                    {
+                        HeroObject heroObject = tObject as HeroObject;
+                        heroObject.Kill("Вы были погрызаны демонами.");
+                    }
+                    else if (tObject is TuxObject)
+                    {
+                        tObject.Destroy();
+                        Controller.Window.Dispatcher.Invoke(() =>
+                        {
+                            var blood = new BloodObject(tObject.Position)
+                            {
+                                MyMap = MyMap,
+                                Controller = Controller
+                            };
+
+                            blood.Place();
+                        });
+                    }
                 }
             }
             foreach (var item in Position.GetNearPoints(AttackZone, false))
             {
                 GameObject tObject = MyMap.GetByCoords(item);
 
-                if (tObject is EnemyObject && tObject != this)
+                if (tObject is DemonObject && tObject != this)
                     Destroy();
             }
         }
@@ -379,12 +400,121 @@ namespace the_game_wpf
             // найти самый ближайший обьект (игрока или монстра)
             // TODO: Игрок в приоритете
             GameObject localObject = MyMap.FindNearlyObject(
-                new GameObject[] { new EnemyObject(), new HeroObject() },
+                new GameObject[] { new TuxObject(), new HeroObject() },
                 Position, Position.GetNearPoints(ViewZone, false));
 
             // не должен быть текущим обьектом, в случае нахождения Enemy
             if (localObject != this)
                 Target = localObject;
+        }
+
+    }
+    public class TuxObject : GameObject
+    {
+        public byte ExitZone = 2;           // область выхода
+        public byte StopZone = 2;           // область атаки прыжка
+        public byte ViewZone = 10;          // область поиска игрока
+        public byte ViewZoneDoor = 5;       // область поиска двери
+        public GameObject Target;           // обьект, который выбран для преследования
+        public const char InitChar = 'T';   // символ, которым изображен этот обьект на карте
+        public TuxObject() { }
+        public TuxObject(MyPoint startPosition)
+        {
+            Position = startPosition;
+            Figure = MakeImage(GetType().Name);
+        }
+
+        private bool CheckMove(MyPoint сoors)
+        {
+            GameObject obj = MyMap.GetByCoords(сoors);
+
+            if (obj is WallObject || obj is ClosedDoorObject || obj is CoinObject ||
+                obj is BulletObject || obj is TuxObject || obj is DemonObject)
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Движение монстра к какому-либо обьекту
+        /// </summary>
+        /// <param name="targetPos">Позиция обьекта</param>
+        public MyPoint MoveToTarget(MyPoint targetPos)
+        {
+            var newCoors = new MyPoint() { X = Position.X, Y = Position.Y };
+            bool move = false;
+
+            foreach (var item in Position.GetNearPoints(StopZone, true))
+                if (MyMap.GetByCoords(item) is HeroObject)
+                    return Position;
+
+            // Движения "по-тупому"
+            {
+                if (targetPos.X < Position.X)
+                {
+                    newCoors.X--;
+                    move = true;
+                }
+                else if (targetPos.X > Position.X)
+                {
+                    newCoors.X++;
+                    move = true;
+                }
+
+                if (!move)
+                    if (targetPos.Y < Position.Y)
+                        newCoors.Y--;
+                    else if (targetPos.Y > Position.Y)
+                        newCoors.Y++;
+            }
+
+            if (CheckMove(newCoors))
+            {
+                return newCoors;
+            }
+            else
+            {
+                return Position;
+            }
+        }
+
+        /// <summary>
+        /// Хендлер перемещения пингвина к обьекту
+        /// </summary>
+        public void Move()
+        {
+            foreach (var item in Position.GetNearPoints(ExitZone, true))
+                if (MyMap.GetByCoords(item) is ExitDoorObject)
+                {
+                    Destroy();
+                    return;
+                }
+
+            if (Target is HeroObject)
+            {
+                GameObject obj = MyMap.FindNearlyObject(
+                new GameObject[] { new ExitDoorObject() },
+                Position, Position.GetNearPoints(ViewZoneDoor, false));
+                
+                if(obj != null)
+                    Target = obj;
+            }
+
+            if (Target == null || Equals(MoveToTarget(Target.Position), Position))
+            {
+                // найти самый ближайший обьект (игрока или монстра)
+                // TODO: Игрок в приоритете
+                GameObject localObject = MyMap.FindNearlyObject(
+                    new GameObject[] { new HeroObject() },
+                    Position, Position.GetNearPoints(ViewZone, false));
+
+                if (localObject != null)
+                    Target = localObject;
+            }
+
+            if (Target != null)
+                Move(MoveToTarget(Target.Position), true);
+                
         }
 
     }
@@ -521,7 +651,7 @@ namespace the_game_wpf
                 case CoinObject _:
                     inPathObject.Destroy();
                     break;
-                case ExitObject _:
+                case ExitDoorObject _:
                     Controller.ShowBox("Вы выиграли!");
                     Controller.Stop();
                     break;

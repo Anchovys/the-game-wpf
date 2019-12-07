@@ -101,13 +101,17 @@ namespace the_game_wpf
 
                     if (deltatime == 1)
                     {
-                        // поиск монстров
-                        // СЛИШКОМ МЕДЛЕННО ( > 5 ms)!
-                        foreach (var item in MainMap.FindObjects(new EnemyObject()))
+                        foreach (var item in MainMap.FindObjects(new DemonObject()))
                         {
-                            EnemyObject enemy = item as EnemyObject;
-                            enemy.Move();
-                            enemy.CheckCollision();
+                            DemonObject demon = item as DemonObject;
+                            demon.Move();
+                            demon.CheckCollision();
+                        }
+
+                        foreach (var item in MainMap.FindObjects(new TuxObject()))
+                        {
+                            TuxObject tux = item as TuxObject;
+                            tux.Move();
                         }
                     }
 

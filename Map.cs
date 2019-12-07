@@ -71,8 +71,8 @@ namespace the_game_wpf
                                 case WallObject.InitChar:
                                     gameObject = new WallObject(new MyPoint() { X = x, Y = y });
                                     break;
-                                case ExitObject.InitChar:
-                                    gameObject = new ExitObject(new MyPoint() { X = x, Y = y });
+                                case ExitDoorObject.InitChar:
+                                    gameObject = new ExitDoorObject(new MyPoint() { X = x, Y = y });
                                     break;
                                 case CoinObject.InitChar:
                                     gameObject = new CoinObject(new MyPoint() { X = x, Y = y });
@@ -80,8 +80,11 @@ namespace the_game_wpf
                                 case HeroObject.InitChar:
                                     gameObject = new HeroObject(new MyPoint() { X = x, Y = y });
                                     break;
-                                case EnemyObject.InitChar:
-                                    gameObject = new EnemyObject(new MyPoint() { X = x, Y = y });
+                                case DemonObject.InitChar:
+                                    gameObject = new DemonObject(new MyPoint() { X = x, Y = y });
+                                    break;
+                                case TuxObject.InitChar:
+                                    gameObject = new TuxObject(new MyPoint() { X = x, Y = y });
                                     break;
                                 case ClosedDoorObject.InitChar:
                                     gameObject = new ClosedDoorObject(new MyPoint() { X = x, Y = y });
