@@ -298,6 +298,18 @@ namespace the_game_wpf
             Position = startPosition;
             Figure = MakeImage(GetType().Name);
         }
+
+        private bool CheckMove(MyPoint сoors) 
+        {
+            GameObject obj = MyMap.GetByCoords(сoors);
+
+
+            if (obj is WallObject || obj is ClosedDoorObject || obj is CoinObject || obj is BulletObject)
+                return false;
+            
+            return true;
+        }
+
         /// <summary>
         /// Движение монстра к какому-либо обьекту
         /// </summary>
@@ -327,8 +339,8 @@ namespace the_game_wpf
                         newCoors.Y++;
             }
 
-            if (MyMap.GetByCoords(newCoors) is null)
-                Move(newCoors);
+            if(CheckMove(newCoors))
+                Move(newCoors, true);
         }
 
         /// <summary>
@@ -494,6 +506,9 @@ namespace the_game_wpf
                     return false;
 
                 case WallObject _:
+                    return false;
+
+                case BulletObject _:
                     return false;
 
                 case KeyObject _:

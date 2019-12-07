@@ -82,9 +82,6 @@ namespace the_game_wpf
             Stopwatch sw = new Stopwatch();
             sw.Stop(); sw.Start();
 
-            // отрисовка (на любой первой итерации - очищаем поле)
-            MainMap.Drawing(GameCanvas, Ticks.Iteration == 0);
-
             if (deltatime == 1 || deltatime == Ticks.TickRate / 2 || deltatime == Ticks.TickRate / 3)
             {
 
