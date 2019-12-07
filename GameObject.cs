@@ -36,29 +36,6 @@ namespace the_game_wpf
             return new MyPoint() { X = x / BlockSizeInPixelsX, Y = y / BlockSizeInPixelsY };
         }
 
-        /* не нужно, работаем с изображениями
-        public Rectangle MakeRectangle(Brush color)
-        {
-            Rectangle temporaryRectangle = new Rectangle
-            {
-                Width = BlockSizeInPixelsX,
-                Height = BlockSizeInPixelsY,
-                Fill = color
-            };
-            return temporaryRectangle;
-        }
-        public Ellipse MakeCurcle(Brush color)
-        {
-            Ellipse temporaryRectangle = new Ellipse
-            {
-                Width = BlockSizeInPixelsX,
-                Height = BlockSizeInPixelsY,
-                Fill = color
-            };
-            return temporaryRectangle;
-        }
-        */
-
         public Rectangle MakeImage(string path)
         {
             // полный путь. папка со спрайтами указывается через настройки
@@ -73,8 +50,8 @@ namespace the_game_wpf
                 Width = BlockSizeInPixelsX,
                 Height = BlockSizeInPixelsY,
                 Fill = new ImageBrush  //вся "магия" - здесь. подставим картинку
-                { 
-                    ImageSource = new BitmapImage(new Uri(fullpath, UriKind.Relative)) 
+                {
+                    ImageSource = new BitmapImage(new Uri(fullpath, UriKind.Relative))
                 },
                 Stretch = Stretch.Fill
             };
@@ -86,13 +63,15 @@ namespace the_game_wpf
         public MyPoint Position = new MyPoint();
         public UIElement Figure = new UIElement();
         public Map MyMap;
-        
+        // временный обьект, сохраняемый при перемещении обьекта
+        private GameObject TempMoveObject = null;
+
         /// <summary>
         /// Убрать обьект с карты
         /// </summary>
         public void Destroy()
         {
-            Console.WriteLine("--> Obj {0} has breen removed from map ({1})", GetType().Name, Position.ToString());
+            Console.WriteLine("--> Obj {0} has breen removed from map [FORCED] ({1})", GetType().Name, Position.ToString());
             MyMap.PlaceObject(Position, null, true);
         }
 
@@ -100,19 +79,94 @@ namespace the_game_wpf
         /// Переместить обьект куда-то, на другие координаты
         /// </summary>
         /// <param name="newPosition">Куда перемещать</param>
-        public MyPoint Move(MyPoint newPosition) 
+        public MyPoint Move(MyPoint newPosition, bool notForced = false)
         {
-            Console.WriteLine("--> Obj {0} moved to ({1} --> {2})", GetType().Name, Position.ToString(), newPosition.ToString());
-            Destroy(); // уничтожим старый обьект
-            Position = newPosition;  // поменяем позицию текущего
-            MyMap.PlaceObject(newPosition, this, true); // запишем в новую
-            return newPosition;
+            if (!notForced)
+            {
+                Console.WriteLine("--> Obj {0} moved to ({1} --> {2}) [FORCED]", GetType().Name, Position.ToString(), newPosition.ToString());
+                Destroy(); // уничтожим старый обьект
+                Position = newPosition;  // поменяем позицию текущего
+                MyMap.PlaceObject(newPosition, this, true); // запишем в новую
+                return newPosition;
+            }
+            else
+            {
+                Destroy(); // уничтожим старый обьект
+                Console.WriteLine("--> Obj {0} moved to ({1} --> {2}) [NOT FORCED]", GetType().Name, Position.ToString(), newPosition.ToString());
+                if (TempMoveObject != null)
+                {
+                    TempMoveObject.Position = Position;
+                    MyMap.PlaceObject(Position, TempMoveObject, true);
+                    Console.WriteLine("==> NOT FORCED FEATURE :: Placed Object '{0}'", TempMoveObject.GetType().FullName);
+                    TempMoveObject = null;
+                }
+                
+                // посмотрим что идет дальше
+                GameObject next = MyMap.GetByCoords(newPosition);
+
+                // не пустота и не игрок, запишем в буфер (сохраним)
+                if (next != null && next.GetType() != typeof(HeroObject))
+                {
+                    Console.WriteLine("==> NOT FORCED FEATURE :: Saved Object '{0}'", next.GetType().FullName);
+                    TempMoveObject = next;
+                }
+
+                MyMap.PlaceObject(newPosition, this, true); // запишем в новую
+
+                Position = newPosition;  // поменяем позицию текущего
+                return newPosition;
+            }
+        }
+
+        /// <summary>
+        /// Размещает теущий экземпляр класса на экране
+        /// Размешать через Dispatcher
+        /// </summary>
+        public void Place(bool replace = false)
+        {
+            MyMap.PlaceObject(Position, this, replace);
+        }
+    }
+    public class OpenedDoorObject : GameObject
+    {
+        public const char InitChar = 'd';   // символ, которым изображен этот обьект на карте
+        public OpenedDoorObject(MyPoint startPosition)
+        {
+            Position = startPosition;
+            Figure = MakeImage(GetType().Name);
+        }
+    }
+    public class ClosedDoorObject : GameObject
+    {
+        public const char InitChar = '~';   // символ, которым изображен этот обьект на карте
+        public ClosedDoorObject(MyPoint startPosition)
+        {
+            Position = startPosition;
+            Figure = MakeImage(GetType().Name);
         }
     }
     public class WallObject : GameObject
     {
         public const char InitChar = '#';   // символ, которым изображен этот обьект на карте
         public WallObject(MyPoint startPosition)
+        {
+            Position = startPosition;
+            Figure = MakeImage(GetType().Name);
+        }
+    }
+    public class DestroyedWallObject : GameObject
+    {
+        public const char InitChar = 'w';   // символ, которым изображен этот обьект на карте
+        public DestroyedWallObject(MyPoint startPosition)
+        {
+            Position = startPosition;
+            Figure = MakeImage(GetType().Name);
+        }
+    }
+    public class KeyObject : GameObject
+    {
+        public const char InitChar = '/';   // символ, которым изображен этот обьект на карте
+        public KeyObject(MyPoint startPosition)
         {
             Position = startPosition;
             Figure = MakeImage(GetType().Name);
@@ -142,21 +196,15 @@ namespace the_game_wpf
             Position = startPosition;
             Figure = MakeImage(GetType().Name);
         }
-        public void Move() 
+
+        public void Move()
         {
+            var newCoors = new MyPoint() { X = Position.X, Y = Position.Y };
             if (Freeze)
             {
                 if (Clean) Destroy();
                 return;
             }
-                
-
-            var newCoors = new MyPoint() { X = Position.X, Y = Position.Y };
-
-            if (LeftDirection) newCoors.X--;
-            else  newCoors.X++;
-
-            GameObject nextObject = MyMap.GetByCoords(newCoors);
 
             if (BulletHealth == 0)
             {
@@ -165,26 +213,67 @@ namespace the_game_wpf
                 return;
             }
 
+            if (LeftDirection)
+                newCoors.X--;
+            else newCoors.X++;
+
+            if (!MyMap.CheckLimits(newCoors))
+            {
+                Freeze = true;
+                Clean = true;
+                return;
+            }
+
+            GameObject nextObject = MyMap.GetByCoords(newCoors);
+
             if (nextObject != null)
                 if (nextObject is WallObject)
                 {
                     BulletHealth--;
                     nextObject.Destroy();
+
+                    Controller.Window.Dispatcher.Invoke(() =>
+                    {
+                        var blood = new DestroyedWallObject(newCoors)
+                        {
+                            MyMap = MyMap,
+                            Controller = Controller
+                        };
+
+                        blood.Place();
+                    });
+                    return;
+                }
+                else if (nextObject is EnemyObject)
+                {
+                    nextObject.Destroy();
+
+                    Controller.Window.Dispatcher.Invoke(() =>
+                    {
+                        var blood = new BloodObject(newCoors)
+                        {
+                            MyMap = MyMap,
+                            Controller = Controller
+                        };
+
+                        blood.Place();
+                    });
+
+                    return;
                 }
                 else if (nextObject is HeroObject)
-                { 
-                    Controller.ShowBox("Вас убило пулей? Серьезно?");
-                    Controller.Stop();
+                {
+                    HeroObject heroObject = nextObject as HeroObject;
+                    heroObject.Kill("Вас раздавило пушечным ядром.");
                 }
-                else if (nextObject is CoinObject) 
+                else if (nextObject is CoinObject || nextObject is ClosedDoorObject)
                 {
                     // меняем направление пули :D
                     LeftDirection = !LeftDirection;
                     return;
                 }
-                else nextObject.Destroy();
 
-            Move(newCoors);
+            Move(newCoors, true);
         }
     }
     public class ExitObject : GameObject
@@ -253,8 +342,8 @@ namespace the_game_wpf
 
                 if (tObject is HeroObject && !MyMap.WallCheck(Position, item))
                 {
-                    Controller.ShowBox("Вас сожрали монстры — с кем не бывает?");
-                    Controller.Stop();
+                    HeroObject heroObject = tObject as HeroObject;
+                    heroObject.Kill("Вы были погрызаны демонами.");
                 }
             }
             foreach (var item in Position.GetNearPoints(AttackZone, false))
@@ -287,15 +376,45 @@ namespace the_game_wpf
         }
 
     }
+    public class BloodObject : GameObject
+    {
+        public const char InitChar = 'B';   // символ, которым изображен этот обьект на карте
+        public BloodObject(MyPoint startPosition)
+        {
+            Position = startPosition;
+            Figure = MakeImage(GetType().Name);
+        }
+    }
     public class HeroObject : GameObject
     {
         public const char InitChar = '+';   // символ, которым изображен этот обьект на карте
         public bool LeftDirection = false;
+        public bool Haskey = false;
         public HeroObject() { }
         public HeroObject(MyPoint startPosition)
         {
             Position = startPosition;
             Figure = MakeImage(GetType().Name);
+        }
+
+        /// <summary>
+        /// Убивает игрока
+        /// </summary>
+        public void Kill(string deathReason = "Вы умерли") 
+        {
+            Controller.Window.Dispatcher.Invoke(() =>
+            {
+                var blood = new BloodObject(Position)
+                {
+                    MyMap = MyMap,
+                    Controller = Controller
+                };
+
+                blood.Place(true);
+            });
+
+            Controller.Stop();
+            Controller.ShowBox(deathReason);
         }
 
         /// <summary>
@@ -334,16 +453,18 @@ namespace the_game_wpf
 
                     Controller.Window.Dispatcher.Invoke(() =>
                     {
-                        MyMap.PlaceObject(newCoors, 
-                            new BulletObject(new MyPoint() { X = newCoors.X, Y = newCoors.Y }) {
-                                LeftDirection = LeftDirection, 
-                                MyMap = MyMap,
-                                Controller = Controller 
-                            });
+                        BulletObject bullet = new BulletObject(newCoors)
+                        {
+                            LeftDirection = LeftDirection,
+                            Controller = Controller,
+                            Position = newCoors,
+                            MyMap = MyMap,
+                        };
+                        bullet.Place();
                     });
+                    
 
                     return true;
-                    break;
                 default:
                     return false;
             }
@@ -351,8 +472,37 @@ namespace the_game_wpf
             GameObject inPathObject = MyMap.GetByCoords(newCoors);
             switch (inPathObject)
             {
+                case ClosedDoorObject _:
+                    // ключ есть
+                    if (Haskey)
+                    {
+                        // испольюзуем ключ
+                        Haskey = false;
+
+                        inPathObject.Destroy();
+                        Controller.Window.Dispatcher.Invoke(() =>
+                        {
+                            MyMap.PlaceObject(newCoors, new OpenedDoorObject(newCoors)
+                            {
+                                Controller = Controller,
+                                Position = newCoors,
+                                MyMap = MyMap,
+                            });
+                        });
+                        return false;
+                    }
+                    return false;
+
                 case WallObject _:
                     return false;
+
+                case KeyObject _:
+                    if(!Haskey) // ключа нет
+                    {
+                        Haskey = true; // "подбираем ключ"
+                        inPathObject.Destroy();
+                    }
+                    break;
                 case CoinObject _:
                     inPathObject.Destroy();
                     break;
@@ -361,7 +511,7 @@ namespace the_game_wpf
                     Controller.Stop();
                     break;
             }
-            Move(newCoors);
+            Move(newCoors, true);
             return true;
         }
     }

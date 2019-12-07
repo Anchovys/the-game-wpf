@@ -4,10 +4,10 @@
     {
         public readonly int TickSpeed = 50;         // с какой скоростью увеличивать тики
         public readonly int TickRate = 10;          // через какое количество тиков их нужно сбросить
-        int CurTick;                // текущий тик, временное значение
-        bool Starts;                // определяет состояние цикла while
-        public bool InPause;        // находится ли цикл сейчас на паузе
-        public int Iteration = 0;   // текущая итерация (число вызовов Update)
+        int CurTick;                                // текущий тик, временное значение
+        bool Starts;                                // определяет состояние цикла while
+        public bool InPause;                        // находится ли цикл сейчас на паузе
+        public int Iteration = 0;                   // текущая итерация (число вызовов Update)
 
         GameController Controller;
 
@@ -38,7 +38,7 @@
 
         void Cycle()
         {
-            while (Starts)
+            while (true)
             {
                 System.Threading.Thread.Sleep(TickSpeed);
 
@@ -52,6 +52,10 @@
 
                 CurTick++;
                 Iteration++;
+
+                // при остановке - выходим, завершив кадр
+                if (!Starts)
+                    break;
             }
         }
     }

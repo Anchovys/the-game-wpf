@@ -78,9 +78,12 @@ namespace the_game_wpf
         /// </summary>
         public void Update(int deltatime)
         {
-            Console.WriteLine("==== new frame {0} ====", deltatime);
+           // Console.WriteLine("==== new frame {0} ====", deltatime);
             Stopwatch sw = new Stopwatch();
             sw.Stop(); sw.Start();
+
+            // отрисовка (на любой первой итерации - очищаем поле)
+            MainMap.Drawing(GameCanvas, Ticks.Iteration == 0);
 
             if (deltatime == 1 || deltatime == Ticks.TickRate / 2 || deltatime == Ticks.TickRate / 3)
             {
@@ -114,11 +117,9 @@ namespace the_game_wpf
                 }
             }
 
-
             // отрисовка (на любой первой итерации - очищаем поле)
             MainMap.Drawing(GameCanvas, Ticks.Iteration == 0);
-
-            Console.WriteLine("Frame end -> ~{0} мс", sw.ElapsedMilliseconds, Ticks.Iteration);
+           // Console.WriteLine("Frame end -> ~{0} мс", sw.ElapsedMilliseconds, Ticks.Iteration);
         }
 
         public void ShowBox(string text, bool exit = false)

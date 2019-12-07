@@ -83,8 +83,11 @@ namespace the_game_wpf
                                 case EnemyObject.InitChar:
                                     gameObject = new EnemyObject(new MyPoint() { X = x, Y = y });
                                     break;
-                                case BulletObject.InitChar:
-                                    gameObject = new BulletObject(new MyPoint() { X = x, Y = y });
+                                case ClosedDoorObject.InitChar:
+                                    gameObject = new ClosedDoorObject(new MyPoint() { X = x, Y = y });
+                                    break;
+                                case KeyObject.InitChar:
+                                    gameObject = new KeyObject(new MyPoint() { X = x, Y = y });
                                     break;
                             }
 
@@ -114,9 +117,9 @@ namespace the_game_wpf
         /// </summary>
         /// <param name="point">Точка</param>
         /// <returns>Принадлежит ли точка карте</returns>
-        private bool CheckLimits(Point point)
+        public bool CheckLimits(MyPoint point)
         {
-            return point.X > 0 && point.X < Width && point.Y > 0 && point.Y < Height;
+            return point.X > 0 && point.X < Width-1 && point.Y > 0 && point.Y < Height-1;
         }
 
         int hash; // последний хеш (для сверки)
@@ -170,8 +173,8 @@ namespace the_game_wpf
                 });
             }
 
-            Console.WriteLine("Map drawing success - {0} ms\nInfo: [changes: {1} / {2}]; {3}",
-                sw.ElapsedMilliseconds, Changes.Count, GameObjects.Count, ElementsForRemove.Count);
+           // Console.WriteLine("Map drawing success - {0} ms\nInfo: [changes: {1} / {2}]; {3}",
+            //    sw.ElapsedMilliseconds, Changes.Count, GameObjects.Count, ElementsForRemove.Count);
 
             Changes.Clear();
             ElementsForRemove.Clear();
@@ -288,37 +291,40 @@ namespace the_game_wpf
         /// <returns>Вернет результат работы</returns>
         public bool PlaceObject(MyPoint cords, GameObject gameObject, bool replace = false)
         {
-
-            if (gameObject == null && replace)
+            Dispatcher.Invoke(() =>
             {
-                if (!GameObjects.ContainsKey(cords))
-                    return false;
+                if (gameObject == null && replace)
+                {
+                    if (!GameObjects.ContainsKey(cords))
+                        return false;
 
-                ElementsForRemove.Add(GameObjects[cords].Figure);
-                GameObjects.Remove(cords);
-                Changes.Remove(cords);
-
-                return true;
-            }
-            else
-            {
-                if (Changes.ContainsKey(cords))
+                    ElementsForRemove.Add(GameObjects[cords].Figure);
+                    GameObjects.Remove(cords);
                     Changes.Remove(cords);
 
-                Changes.Add(cords, gameObject);
-
-                if (!GameObjects.ContainsKey(cords)) // без замены обьекта
-                {
-                    GameObjects.Add(cords, gameObject);
                     return true;
                 }
-                else if (replace) // заменять обьект, даже если там что-то есть
+                else
                 {
-                    GameObjects[cords] = gameObject;
-                    return true;
+                    if (Changes.ContainsKey(cords))
+                        Changes.Remove(cords);
+
+                    Changes.Add(cords, gameObject);
+
+                    if (!GameObjects.ContainsKey(cords)) // без замены обьекта
+                    {
+                        GameObjects.Add(cords, gameObject);
+                        return true;
+                    }
+                    else if (replace) // заменять обьект, даже если там что-то есть
+                    {
+                        GameObjects[cords] = gameObject;
+                        return true;
+                    }
                 }
                 return false;
-            }
+            });
+            return false;
         }
     }
 }
