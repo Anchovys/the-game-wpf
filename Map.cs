@@ -92,6 +92,12 @@ namespace the_game_wpf
                                 case KeyObject.InitChar:
                                     gameObject = new KeyObject(new MyPoint() { X = x, Y = y });
                                     break;
+                                case AmmoObject.InitChar:
+                                    gameObject = new AmmoObject(new MyPoint() { X = x, Y = y });
+                                    break;
+                                case CannonObject.InitChar:
+                                    gameObject = new CannonObject(new MyPoint() { X = x, Y = y });
+                                    break;
                             }
 
                             if (gameObject != null)

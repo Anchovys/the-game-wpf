@@ -10,10 +10,36 @@ namespace the_game_wpf
     {
         private readonly Map MainMap;               // игровая карта
         private readonly HeroObject HeroObject;     // игрок (чтобы не искать каждый кадр)
-        public  readonly MainWindow Window;         // окно основного потока - нужно для изменения
+        public readonly MainWindow Window;          // окно основного потока - нужно для изменения
         private readonly Canvas GameCanvas;         // игровое поле, на котором будут распологаться обьекты
         private readonly Tick Ticks;                // управление тиками
-        public  readonly GameOptions Options;       // загруженные настройки игры
+        public readonly GameOptions Options;        // загруженные настройки игры
+        private int tuxcount = 0;                    // количество пингвинов
+        private int score = 0;
+
+        public int Score // свойство очков
+        {
+            get {  return score;  }
+            set 
+            {
+                score = value; // обновляем значение
+                UpdateScoreTrigger(score); // триггерим обновление
+            }
+        }
+
+        public int TuxCount // свойство очков
+        {
+            get { return tuxcount; }
+            set
+            {
+                if (tuxcount != value)
+                {
+                    tuxcount = value; // обновляем значение
+                    UpdateTuxCountTrigger(tuxcount); // триггерим обновление
+                }
+            }
+        }
+
 
         public int LastInputKey = -1;
 
@@ -108,7 +134,9 @@ namespace the_game_wpf
                             demon.CheckCollision();
                         }
 
-                        foreach (var item in MainMap.FindObjects(new TuxObject()))
+                        GameObject[] gameObjectsTux = MainMap.FindObjects(new TuxObject());
+                        TuxCount = gameObjectsTux.Length;
+                        foreach (var item in gameObjectsTux)
                         {
                             TuxObject tux = item as TuxObject;
                             tux.Move();
@@ -120,7 +148,25 @@ namespace the_game_wpf
 
             // отрисовка (на любой первой итерации - очищаем поле)
             MainMap.Drawing(GameCanvas, Ticks.Iteration == 0);
-           // Console.WriteLine("Frame end -> ~{0} мс", sw.ElapsedMilliseconds, Ticks.Iteration);
+            Console.WriteLine("Frame end -> ~{0} мс", sw.ElapsedMilliseconds, Ticks.Iteration);
+        }
+
+        public void UpdateScoreTrigger(int to) 
+        {
+            // должны вызвать из диспетчера окна
+            Window.Dispatcher.Invoke(() =>
+            {
+                Window.Scores.Content = to.ToString();
+            });
+        }
+
+        public void UpdateTuxCountTrigger(int to)
+        {
+            // должны вызвать из диспетчера окна
+            Window.Dispatcher.Invoke(() =>
+            {
+                Window.TuxCounts.Content = to.ToString();
+            });
         }
 
         public void ShowBox(string text, bool exit = false)
@@ -128,7 +174,9 @@ namespace the_game_wpf
             // должны вызвать из диспетчера окна
             Window.Dispatcher.Invoke(() =>
             {
-                MessageBox.Show(text, "Внимание");
+                // вызов в фоне
+                Window.Dispatcher.BeginInvoke((Action)(() => MessageBox.Show(text, "Внимание")));
+
                 if (exit) Environment.Exit(0);
             });
         }

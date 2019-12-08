@@ -38,14 +38,17 @@ namespace the_game_wpf
 
         public Rectangle MakeImage(string path)
         {
+            string RunningPath = AppDomain.CurrentDomain.BaseDirectory;
             // полный путь. папка со спрайтами указывается через настройки
-            string fullpath = System.IO.Path.Combine("assets", path) + ".png";
+
+            string fullpath = string.Format("{0}{1}", RunningPath,
+                System.IO.Path.Combine(System.IO.Path.Combine("assets", "items"), path + ".png"));
 
             // нужно проверить, есть ли файл по пути
             if (!System.IO.File.Exists(fullpath))
                 throw new Exception("ERROR :: NOT FOUND IMAGE ON PATH: " + fullpath);
 
-            Rectangle image = new Rectangle
+            return new Rectangle
             {
                 Width = BlockSizeInPixelsX,
                 Height = BlockSizeInPixelsY,
@@ -55,7 +58,7 @@ namespace the_game_wpf
                 },
                 Stretch = Stretch.Fill
             };
-            return image;
+
         }
     }
     public class GameObject : Item
@@ -127,7 +130,10 @@ namespace the_game_wpf
         /// </summary>
         public void Place(bool replace = false)
         {
-            MyMap.PlaceObject(Position, this, replace);
+            Controller.Window.Dispatcher.Invoke(() =>
+            {
+                MyMap.PlaceObject(Position, this, replace);
+            });
         }
     }
     public class OpenedDoorObject : GameObject
@@ -175,10 +181,19 @@ namespace the_game_wpf
             Figure = MakeImage(GetType().Name);
         }
     }
-    public class CoinObject : GameObject
+    public class AmmoObject : GameObject
     {
-        public const char InitChar = '0';   // символ, которым изображен этот обьект на карте
-        public CoinObject(MyPoint startPosition)
+        public const char InitChar = '8';   // символ, которым изображен этот обьект на карте
+        public AmmoObject(MyPoint startPosition)
+        {
+            Position = startPosition;
+            Figure = MakeImage(GetType().Name);
+        }
+    }
+    public class CannonObject : GameObject
+    {
+        public const char InitChar = 'C';   // символ, которым изображен этот обьект на карте
+        public CannonObject(MyPoint startPosition)
         {
             Position = startPosition;
             Figure = MakeImage(GetType().Name);
@@ -245,6 +260,7 @@ namespace the_game_wpf
 
                         destroyedWall.Place();
                     });
+
                     return;
                 }
                 else if (nextObject is DemonObject)
@@ -264,19 +280,36 @@ namespace the_game_wpf
 
                     return;
                 }
+                else if (nextObject is TuxObject)
+                {
+                    TuxObject tuxObject = nextObject as TuxObject;
+                    tuxObject.Kill();
+                    return;
+                }
                 else if (nextObject is HeroObject)
                 {
                     HeroObject heroObject = nextObject as HeroObject;
                     heroObject.Kill("Вас раздавило пушечным ядром.");
+                    return;
                 }
-                else if (nextObject is CoinObject || nextObject is ClosedDoorObject)
+                else if (nextObject is CoinObject || nextObject is ClosedDoorObject || nextObject is KeyObject)
                 {
-                    // меняем направление пули :D
+                    // меняем направление пули
                     LeftDirection = !LeftDirection;
+                    BulletHealth--;
                     return;
                 }
 
             Move(newCoors, true);
+        }
+    }
+    public class CoinObject : GameObject
+    {
+        public const char InitChar = '0';   // символ, которым изображен этот обьект на карте
+        public CoinObject(MyPoint startPosition)
+        {
+            Position = startPosition;
+            Figure = MakeImage(GetType().Name);
         }
     }
     public class ExitDoorObject : GameObject
@@ -362,20 +395,13 @@ namespace the_game_wpf
                     {
                         HeroObject heroObject = tObject as HeroObject;
                         heroObject.Kill("Вы были погрызаны демонами.");
+                        return;
                     }
                     else if (tObject is TuxObject)
                     {
-                        tObject.Destroy();
-                        Controller.Window.Dispatcher.Invoke(() =>
-                        {
-                            var blood = new BloodObject(tObject.Position)
-                            {
-                                MyMap = MyMap,
-                                Controller = Controller
-                            };
-
-                            blood.Place();
-                        });
+                        TuxObject tuxObject = tObject as TuxObject;
+                        tuxObject.Kill();
+                        return;
                     }
                 }
             }
@@ -414,7 +440,7 @@ namespace the_game_wpf
         public byte ExitZone = 2;           // область выхода
         public byte StopZone = 2;           // область атаки прыжка
         public byte ViewZone = 10;          // область поиска игрока
-        public byte ViewZoneDoor = 5;       // область поиска двери
+        public byte ViewZoneDoor = 7;       // область поиска двери
         public GameObject Target;           // обьект, который выбран для преследования
         public const char InitChar = 'T';   // символ, которым изображен этот обьект на карте
         public TuxObject() { }
@@ -422,6 +448,24 @@ namespace the_game_wpf
         {
             Position = startPosition;
             Figure = MakeImage(GetType().Name);
+        }
+
+        public void Kill()
+        {
+            Destroy();
+            Controller.Window.Dispatcher.Invoke(() =>
+            {
+                var blood = new BloodObject(Position)
+                {
+                    MyMap = MyMap,
+                    Controller = Controller
+                };
+
+                blood.Place();
+            });
+
+            Controller.ShowBox("Вы проиграли!\nОдин из пингвинов погиб.");
+            Controller.Stop();
         }
 
         private bool CheckMove(MyPoint сoors)
@@ -532,6 +576,9 @@ namespace the_game_wpf
         public const char InitChar = '+';   // символ, которым изображен этот обьект на карте
         public bool LeftDirection = false;
         public bool Haskey = false;
+        public bool HasGun = false;
+        public int Ammo = 0;
+
         public HeroObject() { }
         public HeroObject(MyPoint startPosition)
         {
@@ -590,20 +637,23 @@ namespace the_game_wpf
                     break;
                 case Key.F:
 
-                    if (LeftDirection) newCoors.X--;
-                    else newCoors.X++;
-
-                    Controller.Window.Dispatcher.Invoke(() =>
+                    if (HasGun && Ammo != 0)
                     {
-                        BulletObject bullet = new BulletObject(newCoors)
+                        if (LeftDirection) newCoors.X--;
+                        else newCoors.X++;
+
+                        Controller.Window.Dispatcher.Invoke(() =>
                         {
-                            LeftDirection = LeftDirection,
-                            Controller = Controller,
-                            Position = newCoors,
-                            MyMap = MyMap,
-                        };
-                        bullet.Place();
-                    });
+                            BulletObject bullet = new BulletObject(newCoors)
+                            {
+                                LeftDirection = LeftDirection,
+                                Controller = Controller,
+                                Position = newCoors,
+                                MyMap = MyMap,
+                            };
+                            bullet.Place();
+                        });
+                    }
                     
 
                     return true;
@@ -648,12 +698,35 @@ namespace the_game_wpf
                         inPathObject.Destroy();
                     }
                     break;
+                case CannonObject _:
+                    if (!HasGun) // пушки нет
+                    {
+                        Ammo += 3;
+                        HasGun = true; // "подбираем пушку"
+                        inPathObject.Destroy();
+                    }
+                    break;
+                case AmmoObject _:
+                    Ammo += 3;
+                    inPathObject.Destroy();
+                    break;
                 case CoinObject _:
+                    Controller.Score++;
                     inPathObject.Destroy();
                     break;
                 case ExitDoorObject _:
-                    Controller.ShowBox("Вы выиграли!");
-                    Controller.Stop();
+
+                    if (Controller.TuxCount == 0)
+                    {
+                        Controller.ShowBox("Вы выиграли!");
+                        Controller.Stop();
+                    }
+                    else 
+                    {
+                        Controller.ShowBox("Спасите всех пингвинов!");
+                        return false;
+                    }
+
                     break;
             }
             Move(newCoors, true);

@@ -19,11 +19,11 @@ namespace the_game_wpf
 
             // иницилизация "Worker"
             worker = new BackgroundWorker();
-            worker.DoWork += worker_DoWork;
+            worker.DoWork += Worker_DoWork;
             worker.RunWorkerAsync();
         }
 
-        private void worker_DoWork(object sender, DoWorkEventArgs e)
+        private void Worker_DoWork(object sender, DoWorkEventArgs e)
         {
             while (true)
             {
