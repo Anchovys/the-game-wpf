@@ -11,10 +11,10 @@ namespace the_game_wpf
         private readonly Map MainMap;               // игровая карта
         private readonly HeroObject HeroObject;     // игрок (чтобы не искать каждый кадр)
         public readonly MainWindow Window;          // окно основного потока - нужно для изменения
-        private readonly Canvas GameCanvas;         // игровое поле, на котором будут распологаться обьекты
+        private readonly Canvas GameField;         // игровое поле, на котором будут распологаться обьекты
         private readonly Tick Ticks;                // управление тиками
         public readonly GameOptions Options;        // загруженные настройки игры
-        private int tuxcount = 0;                    // количество пингвинов
+        private int tuxcount = 0;                   // количество пингвинов
         private int score = 0;
 
         public int Score // свойство очков
@@ -45,30 +45,52 @@ namespace the_game_wpf
 
         public GameController(MainWindow window)
         {
-            Console.WriteLine("GameController init With options: ");
+            Stopwatch sw = new Stopwatch();
+
+            sw.Start();
+            Console.WriteLine("▀ ▀ Init Options... Please, wait!");
 
             // работаем с настройками
             Options = new GameOptions();    // сначала дефолтные
             if (!Options.Pop(Options))      // пытаемся загрузить из файла
             {
                 // сохраняем дефолтные настройки в файл
-                Options = new GameOptions();  
+                Options = new GameOptions();
                 Options.Push();
             }
 
+            sw.Stop();
+            Console.WriteLine("Options loaded in '{0}'ms", sw.ElapsedMilliseconds);
+
+            Console.WriteLine("GameController init With options: ");
+
             // вывод настроек на экран
             foreach (var f in Options.GetType().GetFields())
-                Console.WriteLine("===> Name: {0} Value: {1}", f.Name, f.GetValue(Options));
+                Console.WriteLine("= Option => Name: {0} Value: {1}", f.Name, f.GetValue(Options));
 
+            // окно передается из аргументов
             Window = window;
-            GameCanvas = Window.GameField;
 
+            // игровое поле берем из окна
+            GameField = Window.GameCanvas;
+
+            // иницилизация тиков
             Ticks = new Tick(this, Options.TickSpeed, Options.TickPerFrame);
+
+            sw.Start();
+            Console.WriteLine("Reading map... Please, wait!");
+
+            // иницилизация карты
             MainMap = new Map(Options.MapFilePath, this);
 
+            sw.Stop();
+            Console.WriteLine("Map read && init at '{0}'ms", sw.ElapsedMilliseconds);
+
+            // карта по каким-то причинам не загружена
             if (!MainMap.LoadStatus)
                 throw new Exception("Map is not loaded!");
 
+            // ищем игрока
             HeroObject = MainMap.FindObject(new HeroObject()) as HeroObject;
         }
 
@@ -89,32 +111,20 @@ namespace the_game_wpf
         }
 
         /// <summary>
-        /// Метод для установки текущего состояния паузы
-        /// </summary>
-        /// <returns>Состояние паузы (после изменения)</returns>
-        public bool Pause()
-        {
-            Ticks.InPause = !Ticks.InPause;
-            Console.WriteLine("State changed.. Current -> {0}", Ticks.InPause);
-            return Ticks.InPause;
-        }
-
-        /// <summary>
         /// Метод будет вызываться каждый кадр
         /// </summary>
         public void Update(int deltatime)
         {
-           // Console.WriteLine("==== new frame {0} ====", deltatime);
             Stopwatch sw = new Stopwatch();
             sw.Stop(); sw.Start();
 
             if (deltatime == 1 || deltatime == Ticks.TickRate / 2 || deltatime == Ticks.TickRate / 3)
             {
-
+                // поиск всех пуль
                 foreach (var item in MainMap.FindObjects(new BulletObject()))
                 {
                     BulletObject enemy = item as BulletObject;
-                    enemy.Move();
+                    enemy.Move();  // перемещение пули
                 }
 
                 if (deltatime == 1 || deltatime == Ticks.TickRate / 2)
@@ -127,19 +137,25 @@ namespace the_game_wpf
 
                     if (deltatime == 1)
                     {
+                        // поиск всех демонов
                         foreach (var item in MainMap.FindObjects(new DemonObject()))
                         {
                             DemonObject demon = item as DemonObject;
-                            demon.Move();
-                            demon.CheckCollision();
+                            demon.Move();             // движение демона
+                            demon.CheckCollision();   // проверка на наличие игрока для сьедания
                         }
 
+                        // найти всех пингвинов
                         GameObject[] gameObjectsTux = MainMap.FindObjects(new TuxObject());
+
+                        // обновим количество пингинов
                         TuxCount = gameObjectsTux.Length;
+
+                        // перебор всех пингвинов
                         foreach (var item in gameObjectsTux)
                         {
                             TuxObject tux = item as TuxObject;
-                            tux.Move();
+                            tux.Move(); // движение пингвина
                         }
                     }
 
@@ -147,10 +163,32 @@ namespace the_game_wpf
             }
 
             // отрисовка (на любой первой итерации - очищаем поле)
-            MainMap.Drawing(GameCanvas, Ticks.Iteration == 0);
-            Console.WriteLine("Frame end -> ~{0} мс", sw.ElapsedMilliseconds, Ticks.Iteration);
+            MainMap.Drawing(GameField, Ticks.Iteration == 0);
+            Console.WriteLine("$ Frame end -> ~ '{0}'ms on Tick: '{1}'", sw.ElapsedMilliseconds, Ticks.Iteration, deltatime);
         }
 
+        /// <summary>
+        /// Метод для установки текущего состояния паузы
+        /// </summary>
+        /// <returns>Состояние паузы (после изменения)</returns>
+        public bool PauseTrigger()
+        {
+            Ticks.InPause = !Ticks.InPause;
+            
+            // должны вызвать из диспетчера окна
+            Window.Dispatcher.Invoke(() =>
+            {
+                Window.StartOrPause.Content = Ticks.InPause ? "Остановить" : "Продолжить";
+            });
+
+            Console.WriteLine("State changed.. Current -> {0}", Ticks.InPause);
+
+            return Ticks.InPause;
+        }
+
+        /// <summary>
+        /// Триггер на обновление очков
+        /// </summary>
         public void UpdateScoreTrigger(int to) 
         {
             // должны вызвать из диспетчера окна
@@ -160,6 +198,9 @@ namespace the_game_wpf
             });
         }
 
+        /// <summary>
+        /// Триггер на обновление количества пингвинов
+        /// </summary>
         public void UpdateTuxCountTrigger(int to)
         {
             // должны вызвать из диспетчера окна
@@ -169,6 +210,11 @@ namespace the_game_wpf
             });
         }
 
+        /// <summary>
+        /// Показать какое-то диалоговое окно 
+        /// </summary>
+        /// <param name="text">Текст диалогового окна</param>
+        /// <param name="exit">Выходить из программы после показа</param>
         public void ShowBox(string text, bool exit = false)
         {
             // должны вызвать из диспетчера окна

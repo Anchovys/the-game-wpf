@@ -10,7 +10,7 @@
         <TabControl HorizontalAlignment="Left" Height="521" Margin="10,33,0,0" VerticalAlignment="Top" Width="868">
             <TabItem Header="Игра">
                 <Grid>
-                    <Canvas x:Name="GameField" Background="Black"/>
+                    <Canvas x:Name="GameCanvas" Background="Black"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Настройки">

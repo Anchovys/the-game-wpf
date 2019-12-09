@@ -13,7 +13,7 @@ namespace the_game_wpf
         public static readonly string NormalConfigFile = "conf.cfg";
         public int TickSpeed = 20;                  // сколько тиков должно пройти, чтобы они обнулились и начали считаться заново
         public int TickPerFrame = 10;               // сколько мс длится 1 тик
-        public string Version = "REV 10";           // текущая версия
+        public string Version = "REV 11";           // текущая версия
         public string MapFilePath = "map.txt";      // путь до папки
         public string SpritesPath = "Assets";       // путь до спрайтов
 

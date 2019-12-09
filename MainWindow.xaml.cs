@@ -43,8 +43,9 @@ namespace the_game_wpf
 
         private void StartOrPause_Click(object sender, RoutedEventArgs e)
         {
-            bool state = controller.Pause();
-            StartOrPause.Content = state ? "Остановить" : "Продолжить";
+
+           controller.PauseTrigger();
+            
         }
 
         private void LoadConfig_Click(object sender, RoutedEventArgs e)

@@ -38,11 +38,8 @@ namespace the_game_wpf
             return str.ToString().GetHashCode();
         }
 
-        public Map(string textFile, GameController controller) 
-		{
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-
+        public Map(string textFile, GameController controller)
+        {
             // необходимо проверить, есть ли карта
             if (!File.Exists(textFile))
                 return; // при ошибке
@@ -102,6 +99,7 @@ namespace the_game_wpf
 
                             if (gameObject != null)
                             {
+
                                 PlaceObject(gameObject.Position, gameObject);
                                 gameObject.MyMap = this;
                                 gameObject.Controller = controller;
@@ -111,13 +109,13 @@ namespace the_game_wpf
                 }
                 catch (Exception e)
                 {
+                    Console.WriteLine(" \n\n\t{0}\n\n", e);
                     LoadStatus = false;
                     return;
                 }
-                Console.WriteLine("Map file read success - {0} ms", sw.ElapsedMilliseconds);
+               
             });
 
-            sw.Stop();
             LoadStatus = true;
 
         }
@@ -183,8 +181,8 @@ namespace the_game_wpf
                 });
             }
 
-           // Console.WriteLine("Map drawing success - {0} ms\nInfo: [changes: {1} / {2}]; {3}",
-            //    sw.ElapsedMilliseconds, Changes.Count, GameObjects.Count, ElementsForRemove.Count);
+            Console.WriteLine("Map drawing success - {0} ms | Info: [changes: {1} / {2}]; {3}",
+                sw.ElapsedMilliseconds, Changes.Count, GameObjects.Count, ElementsForRemove.Count);
 
             Changes.Clear();
             ElementsForRemove.Clear();

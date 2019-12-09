@@ -74,7 +74,7 @@ namespace the_game_wpf
         /// </summary>
         public void Destroy()
         {
-            Console.WriteLine("--> Obj {0} has breen removed from map [FORCED] ({1})", GetType().Name, Position.ToString());
+            Console.WriteLine("--> Obj {0} removed [F] coords({1})", GetType().Name, Position.ToString());
             MyMap.PlaceObject(Position, null, true);
         }
 
@@ -89,7 +89,7 @@ namespace the_game_wpf
 
             if (!notForced)
             {
-                Console.WriteLine("--> Obj {0} moved to ({1} --> {2}) [FORCED]", GetType().Name, Position.ToString(), newPosition.ToString());
+                Console.WriteLine("--> Obj {0} moved to (old : '{1}' --> new : '{2}') [F]", GetType().Name, Position.ToString(), newPosition.ToString());
                 Destroy(); // уничтожим старый обьект
                 Position = newPosition;  // поменяем позицию текущего
                 MyMap.PlaceObject(newPosition, this, true); // запишем в новую
@@ -98,12 +98,12 @@ namespace the_game_wpf
             else
             {
                 Destroy(); // уничтожим старый обьект
-                Console.WriteLine("--> Obj {0} moved to ({1} --> {2}) [NOT FORCED]", GetType().Name, Position.ToString(), newPosition.ToString());
+                Console.WriteLine("--> Obj {0} moved to (old : '{1}' --> new : '{2}') [N F]", GetType().Name, Position.ToString(), newPosition.ToString());
                 if (TempMoveObject != null)
                 {
                     TempMoveObject.Position = Position;
                     MyMap.PlaceObject(Position, TempMoveObject, true);
-                    Console.WriteLine("==> NOT FORCED FEATURE :: Placed Object '{0}'", TempMoveObject.GetType().FullName);
+                    Console.WriteLine("==> N F FEATURE :: Placed Object '{0}'", TempMoveObject.GetType().FullName);
                     TempMoveObject = null;
                 }
                 
@@ -113,7 +113,7 @@ namespace the_game_wpf
                 // не пустота и не игрок, запишем в буфер (сохраним)
                 if (next != null && next.GetType() != typeof(HeroObject))
                 {
-                    Console.WriteLine("==> NOT FORCED FEATURE :: Saved Object '{0}'", next.GetType().FullName);
+                    Console.WriteLine("==> N F FEATURE :: Saved Object '{0}'", next.GetType().FullName);
                     TempMoveObject = next;
                 }
 
