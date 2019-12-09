@@ -111,7 +111,8 @@ namespace the_game_wpf
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    LoadStatus = false;
+                    return;
                 }
                 Console.WriteLine("Map file read success - {0} ms", sw.ElapsedMilliseconds);
             });
