@@ -9,8 +9,8 @@ namespace the_game_wpf
     /// </summary>
     public class MyPoint
     {
-        public int X;
-        public int Y;
+        public double X;
+        public double Y;
 
         public new string ToString()
         {

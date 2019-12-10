@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using OptionsLoader;
+//using OptionsLoader;
 
 namespace the_game_wpf
 {
@@ -19,7 +19,8 @@ namespace the_game_wpf
 
         public bool Push()
         {
-            return Loader.Save(this, NormalConfigFile);
+            return false;
+            //return Loader.Save(this, NormalConfigFile);
         }
 
         public string GetText()
@@ -29,7 +30,8 @@ namespace the_game_wpf
 
         public bool Pop(GameOptions options)
         {
-            return Loader.Load(options, NormalConfigFile);
+            return false;
+            //return Loader.Load(options, NormalConfigFile);
         }
 
     }
