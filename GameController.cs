@@ -8,10 +8,10 @@ namespace the_game_wpf
 {
     public class GameController
     {
-        private readonly Map MainMap;               // игровая карта
+        public readonly Map MainMap;                // игровая карта
         private readonly HeroObject HeroObject;     // игрок (чтобы не искать каждый кадр)
         public readonly MainWindow Window;          // окно основного потока - нужно для изменения
-        public readonly Canvas GameField;         // игровое поле, на котором будут распологаться обьекты
+        public readonly Canvas GameField;           // игровое поле, на котором будут распологаться обьекты
         private readonly Tick Ticks;                // управление тиками
         public readonly GameOptions Options;        // загруженные настройки игры
         private int tuxcount = 0;                   // количество пингвинов
@@ -81,14 +81,16 @@ namespace the_game_wpf
             Console.WriteLine("Reading map... Please, wait!");
 
             // иницилизация карты
-            MainMap = new Map(Options.MapFilePath, this);
+            MainMap = new Map(this);
+
+            // карта по каким-то причинам не загружена
+            if (!MainMap.Load())
+                throw new Exception("Map is not loaded!");
 
             sw.Stop();
             Console.WriteLine("Map read && init at '{0}'ms", sw.ElapsedMilliseconds);
 
-            // карта по каким-то причинам не загружена
-            if (!MainMap.LoadStatus)
-                throw new Exception("Map is not loaded!");
+            
 
             // ищем игрока
             HeroObject = MainMap.FindObject(new HeroObject()) as HeroObject;

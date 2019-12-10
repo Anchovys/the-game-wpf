@@ -14,11 +14,18 @@ namespace the_game_wpf
         public int Width;
         public int Height;
 
+        /// <summary>
+        /// Размер элемента на карте, 
+        /// вычисляемый исходя из размеров загруженной карты
+        /// </summary>
+        public MyPoint BlockSizes;
+
         private readonly Dictionary<MyPoint, GameObject> GameObjects = new Dictionary<MyPoint, GameObject>();
         private readonly Dictionary<MyPoint, GameObject> Changes = new Dictionary<MyPoint, GameObject>();
         private readonly List<UIElement> ElementsForRemove = new List<UIElement>();
 
         private readonly Dispatcher Dispatcher;
+        private readonly GameController Controller;
 
         public bool LoadStatus;
 
@@ -38,26 +45,47 @@ namespace the_game_wpf
             return str.ToString().GetHashCode();
         }
 
-        public Map(string textFile, GameController controller)
+        public Map(GameController controller)
         {
+            Controller = controller;
+            Dispatcher = Controller.Window.Dispatcher;
+        }
+
+        public bool Load()
+        {
+            //получаем путь до карты
+            string textFile = Controller.Options.MapFilePath;
+
             // необходимо проверить, есть ли карта
             if (!File.Exists(textFile))
-                return; // при ошибке
+                return false; // при ошибке
 
             // читаем карту
             var lines = File.ReadAllLines(textFile);
 
             if (lines.Length == 0 || lines[0].Length == 0)
-                return; // при ошибке
+                return false; // при ошибке
 
             Height = lines.Length;
             Width = lines[0].Length;
 
-            Dispatcher = controller.Window.Dispatcher;
             Dispatcher.Invoke(() =>
             {
                 try
                 {
+                    // сохраним какие размеры должны иметь элементы
+                    BlockSizes = new MyPoint() 
+                    { 
+                        X = Controller.GameField.Width / Width, 
+                        Y = Controller.GameField.Height / Height 
+                    };
+
+                    if (BlockSizes.X > BlockSizes.Y)
+                        BlockSizes.X = BlockSizes.Y;
+                    else BlockSizes.Y = BlockSizes.X;
+
+                    Console.WriteLine("Block size: {0}", BlockSizes.ToString());
+
                     for (int x = 0; x < Width; x++)
                         for (int y = 0; y < Height; y++)
                         {
@@ -66,59 +94,49 @@ namespace the_game_wpf
                             switch (lines[y][x])
                             {
                                 case WallObject.InitChar:
-                                    gameObject = new WallObject(new MyPoint() { X = x, Y = y });
+                                    gameObject = new WallObject(new MyPoint() { X = x, Y = y }, Controller);
                                     break;
                                 case ExitDoorObject.InitChar:
-                                    gameObject = new ExitDoorObject(new MyPoint() { X = x, Y = y });
+                                    gameObject = new ExitDoorObject(new MyPoint() { X = x, Y = y }, Controller);
                                     break;
                                 case CoinObject.InitChar:
-                                    gameObject = new CoinObject(new MyPoint() { X = x, Y = y });
+                                    gameObject = new CoinObject(new MyPoint() { X = x, Y = y }, Controller);
                                     break;
                                 case HeroObject.InitChar:
-                                    gameObject = new HeroObject(new MyPoint() { X = x, Y = y });
+                                    gameObject = new HeroObject(new MyPoint() { X = x, Y = y }, Controller);
                                     break;
                                 case DemonObject.InitChar:
-                                    gameObject = new DemonObject(new MyPoint() { X = x, Y = y });
+                                    gameObject = new DemonObject(new MyPoint() { X = x, Y = y }, Controller);
                                     break;
                                 case TuxObject.InitChar:
-                                    gameObject = new TuxObject(new MyPoint() { X = x, Y = y });
+                                    gameObject = new TuxObject(new MyPoint() { X = x, Y = y }, Controller);
                                     break;
                                 case ClosedDoorObject.InitChar:
-                                    gameObject = new ClosedDoorObject(new MyPoint() { X = x, Y = y });
+                                    gameObject = new ClosedDoorObject(new MyPoint() { X = x, Y = y }, Controller);
                                     break;
                                 case KeyObject.InitChar:
-                                    gameObject = new KeyObject(new MyPoint() { X = x, Y = y });
+                                    gameObject = new KeyObject(new MyPoint() { X = x, Y = y }, Controller);
                                     break;
                                 case AmmoObject.InitChar:
-                                    gameObject = new AmmoObject(new MyPoint() { X = x, Y = y });
+                                    gameObject = new AmmoObject(new MyPoint() { X = x, Y = y }, Controller);
                                     break;
                                 case CannonObject.InitChar:
-                                    gameObject = new CannonObject(new MyPoint() { X = x, Y = y });
+                                    gameObject = new CannonObject(new MyPoint() { X = x, Y = y }, Controller);
                                     break;
                             }
 
-                            if (gameObject is GameObject)
-                            {
+                            if (gameObject != null)
                                 PlaceObject(gameObject.Position, gameObject);
-                                gameObject.MyMap = this;
-                                gameObject.Controller = controller;
-                                gameObject.BlockSizeInPixelsX = (int)(controller.GameField.Width / Width);
-                                gameObject.BlockSizeInPixelsY = (int)(controller.GameField.Height / Height);
-                            }
 
                         }
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(" \n\n\t{0}\n\n", e);
-                    LoadStatus = false;
-                    return;
                 }
                
             });
-
-            LoadStatus = true;
-
+            return true;
         }
 
         /// <summary>

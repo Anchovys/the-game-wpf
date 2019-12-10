@@ -5,12 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:the_game_wpf"
         mc:Ignorable="d"
-        Title="The Game" Height="592.975" Width="894" ResizeMode="NoResize">
-    <Grid KeyDown="Grid_KeyDown">
-        <TabControl HorizontalAlignment="Left" Height="521" Margin="10,33,0,0" VerticalAlignment="Top" Width="868">
+        Title="The Game" Height="707.975" Width="850" ResizeMode="NoResize">
+    <Grid KeyDown="Grid_KeyDown" Margin="0,0,0,3">
+        <TabControl HorizontalAlignment="Left" Height="633" Margin="10,33,0,0" VerticalAlignment="Top" Width="824">
             <TabItem Header="Игра">
                 <Grid>
-                    <Canvas x:Name="GameCanvas" Background="Black"/>
+                    <Canvas x:Name="GameCanvas" Background="Black" HorizontalAlignment="Right" Width="800" Height="600" VerticalAlignment="Top" Margin="0,0,10,-307"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Настройки">

@@ -35,18 +35,25 @@ namespace the_game_wpf
             return new MyPoint() { X = x / BlockSizeInPixelsX, Y = y / BlockSizeInPixelsY };
         }
 
-        public Rectangle MakeImage(string path)
+        public Rectangle MakeImage(string path, MyPoint changeSizes = null)
         {
             string RunningPath = AppDomain.CurrentDomain.BaseDirectory;
             // полный путь. папка со спрайтами указывается через настройки
-
             string fullpath = string.Format("{0}{1}", RunningPath,
-                System.IO.Path.Combine(System.IO.Path.Combine("assets", "items"), path + ".png"));
+                System.IO.Path.Combine(System.IO.Path.Combine(Controller.Options.SpritesPath, "items"), path + ".png"));
 
             // нужно проверить, есть ли файл по пути
             if (!System.IO.File.Exists(fullpath))
                 throw new Exception("ERROR :: NOT FOUND IMAGE ON PATH: " + fullpath);
 
+            // заданы кастомные размеры
+            if (changeSizes != null)
+            {
+                BlockSizeInPixelsX = (int)changeSizes.X;
+                BlockSizeInPixelsY = (int)changeSizes.Y;
+            }
+
+            // создаем прямоугольник
             return new Rectangle
             {
                 Width = BlockSizeInPixelsX,
@@ -64,7 +71,7 @@ namespace the_game_wpf
     {
         public MyPoint Position = new MyPoint();
         public UIElement Figure = new UIElement();
-        public Map MyMap;
+
         // временный обьект, сохраняемый при перемещении обьекта
         private GameObject TempMoveObject = null;
 
@@ -74,7 +81,7 @@ namespace the_game_wpf
         public void Destroy()
         {
             Console.WriteLine("--> Obj {0} removed [F] coords({1})", GetType().Name, Position.ToString());
-            MyMap.PlaceObject(Position, null, true);
+            Controller.MainMap.PlaceObject(Position, null, true);
         }
 
         /// <summary>
@@ -91,7 +98,7 @@ namespace the_game_wpf
                 Console.WriteLine("--> Obj {0} moved to (old : '{1}' --> new : '{2}') [F]", GetType().Name, Position.ToString(), newPosition.ToString());
                 Destroy(); // уничтожим старый обьект
                 Position = newPosition;  // поменяем позицию текущего
-                MyMap.PlaceObject(newPosition, this, true); // запишем в новую
+                Controller.MainMap.PlaceObject(newPosition, this, true); // запишем в новую
                 return newPosition;
             }
             else
@@ -101,13 +108,13 @@ namespace the_game_wpf
                 if (TempMoveObject != null)
                 {
                     TempMoveObject.Position = Position;
-                    MyMap.PlaceObject(Position, TempMoveObject, true);
+                    Controller.MainMap.PlaceObject(Position, TempMoveObject, true);
                     Console.WriteLine("==> N F FEATURE :: Placed Object '{0}'", TempMoveObject.GetType().FullName);
                     TempMoveObject = null;
                 }
                 
                 // посмотрим что идет дальше
-                GameObject next = MyMap.GetByCoords(newPosition);
+                GameObject next = Controller.MainMap.GetByCoords(newPosition);
 
                 // не пустота и не игрок, запишем в буфер (сохраним)
                 if (next != null && next.GetType() != typeof(HeroObject))
@@ -116,7 +123,7 @@ namespace the_game_wpf
                     TempMoveObject = next;
                 }
 
-                MyMap.PlaceObject(newPosition, this, true); // запишем в новую
+                Controller.MainMap.PlaceObject(newPosition, this, true); // запишем в новую
 
                 Position = newPosition;  // поменяем позицию текущего
                 return newPosition;
@@ -131,7 +138,7 @@ namespace the_game_wpf
         {
             Controller.Window.Dispatcher.Invoke(() =>
             {
-                MyMap.PlaceObject(Position, this, replace);
+                Controller.MainMap.PlaceObject(Position, this, replace);
             });
         }
     }
@@ -141,7 +148,13 @@ namespace the_game_wpf
         public OpenedDoorObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeImage(GetType().Name);
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
+        }
+        public OpenedDoorObject(MyPoint startPosition, GameController controller)
+        {
+            Position = startPosition;
+            Controller = controller;
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
         }
     }
     public class ClosedDoorObject : GameObject
@@ -150,7 +163,13 @@ namespace the_game_wpf
         public ClosedDoorObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeImage(GetType().Name);
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
+        }
+        public ClosedDoorObject(MyPoint startPosition, GameController controller)
+        {
+            Position = startPosition;
+            Controller = controller;
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
         }
     }
     public class WallObject : GameObject
@@ -159,7 +178,13 @@ namespace the_game_wpf
         public WallObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeImage(GetType().Name);
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
+        }
+        public WallObject(MyPoint startPosition, GameController controller)
+        {
+            Position = startPosition;
+            Controller = controller;
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
         }
     }
     public class DestroyedWallObject : GameObject
@@ -168,7 +193,13 @@ namespace the_game_wpf
         public DestroyedWallObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeImage(GetType().Name);
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
+        }
+        public DestroyedWallObject(MyPoint startPosition, GameController controller)
+        {
+            Position = startPosition; 
+            Controller = controller;
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
         }
     }
     public class KeyObject : GameObject
@@ -177,7 +208,13 @@ namespace the_game_wpf
         public KeyObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeImage(GetType().Name);
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
+        }
+        public KeyObject(MyPoint startPosition, GameController controller)
+        {
+            Position = startPosition;
+            Controller = controller;
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
         }
     }
     public class AmmoObject : GameObject
@@ -186,7 +223,13 @@ namespace the_game_wpf
         public AmmoObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeImage(GetType().Name);
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
+        }
+        public AmmoObject(MyPoint startPosition, GameController controller)
+        {
+            Position = startPosition;
+            Controller = controller;
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
         }
     }
     public class CannonObject : GameObject
@@ -195,7 +238,13 @@ namespace the_game_wpf
         public CannonObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeImage(GetType().Name);
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
+        }
+        public CannonObject(MyPoint startPosition, GameController controller)
+        {
+            Position = startPosition;
+            Controller = controller;
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
         }
     }
     public class BulletObject : GameObject
@@ -211,7 +260,13 @@ namespace the_game_wpf
         public BulletObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeImage(GetType().Name);
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
+        }
+        public BulletObject(MyPoint startPosition, GameController controller)
+        {
+            Position = startPosition;
+            Controller = controller;
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
         }
 
         public void Move()
@@ -234,14 +289,14 @@ namespace the_game_wpf
                 newCoors.X--;
             else newCoors.X++;
 
-            if (!MyMap.CheckLimits(newCoors))
+            if (!Controller.MainMap.CheckLimits(newCoors))
             {
                 Freeze = true;
                 Clean = true;
                 return;
             }
 
-            GameObject nextObject = MyMap.GetByCoords(newCoors);
+            GameObject nextObject = Controller.MainMap.GetByCoords(newCoors);
 
             if (nextObject != null)
                 switch (nextObject)
@@ -253,11 +308,7 @@ namespace the_game_wpf
 
                             Controller.Window.Dispatcher.Invoke(() =>
                             {
-                                var destroyedWall = new DestroyedWallObject(newCoors)
-                                {
-                                    MyMap = MyMap,
-                                    Controller = Controller
-                                };
+                                var destroyedWall = new DestroyedWallObject(newCoors, Controller);
 
                                 destroyedWall.Place();
                             });
@@ -312,7 +363,13 @@ namespace the_game_wpf
         public CoinObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeImage(GetType().Name);
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
+        }
+        public CoinObject(MyPoint startPosition, GameController controller)
+        {
+            Position = startPosition;
+            Controller = controller;
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
         }
     }
     public class ExitDoorObject : GameObject
@@ -322,7 +379,13 @@ namespace the_game_wpf
         public ExitDoorObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeImage(GetType().Name);
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
+        }
+        public ExitDoorObject(MyPoint startPosition, GameController controller)
+        {
+            Position = startPosition;
+            Controller = controller;
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
         }
     }
     public class DemonObject : GameObject
@@ -336,26 +399,27 @@ namespace the_game_wpf
         public DemonObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeImage(GetType().Name);
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
+        }
+        public DemonObject(MyPoint startPosition, GameController controller)
+        {
+            Position = startPosition;
+            Controller = controller;
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
         }
 
         public void Kill() 
         {
             Controller.Window.Dispatcher.Invoke(() =>
             {
-                var blood = new BloodObject(Position)
-                {
-                    MyMap = MyMap,
-                    Controller = Controller
-                };
-
+                var blood = new BloodObject(Position, Controller);
                 blood.Place();
             });
         }
 
         private bool CheckMove(MyPoint сoors) 
         {
-            GameObject obj = MyMap.GetByCoords(сoors);
+            GameObject obj = Controller.MainMap.GetByCoords(сoors);
 
 
             if (obj is WallObject || obj is ClosedDoorObject || obj is CoinObject || obj is BulletObject)
@@ -404,9 +468,9 @@ namespace the_game_wpf
         {
             foreach (var item in Position.GetNearPoints(AttackZoneJumping, true))
             {
-                GameObject tObject = MyMap.GetByCoords(item);
+                GameObject tObject = Controller.MainMap.GetByCoords(item);
 
-                if(!MyMap.WallCheck(Position, item))
+                if(!Controller.MainMap.WallCheck(Position, item))
                 {
                     if (tObject is HeroObject)
                     {
@@ -424,7 +488,7 @@ namespace the_game_wpf
             }
             foreach (var item in Position.GetNearPoints(AttackZone, false))
             {
-                GameObject tObject = MyMap.GetByCoords(item);
+                GameObject tObject = Controller.MainMap.GetByCoords(item);
 
                 if (tObject is DemonObject && tObject != this)
                     Destroy();
@@ -442,7 +506,7 @@ namespace the_game_wpf
 
             // найти самый ближайший обьект (игрока или монстра)
             // TODO: Игрок в приоритете
-            GameObject localObject = MyMap.FindNearlyObject(
+            GameObject localObject = Controller.MainMap.FindNearlyObject(
                 new GameObject[] { new TuxObject(), new HeroObject() },
                 Position, Position.GetNearPoints(ViewZone, false));
 
@@ -464,7 +528,13 @@ namespace the_game_wpf
         public TuxObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeImage(GetType().Name);
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
+        }
+        public TuxObject(MyPoint startPosition, GameController controller)
+        {
+            Position = startPosition;
+            Controller = controller;
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
         }
 
         public void Kill()
@@ -472,11 +542,7 @@ namespace the_game_wpf
             Destroy();
             Controller.Window.Dispatcher.Invoke(() =>
             {
-                var blood = new BloodObject(Position)
-                {
-                    MyMap = MyMap,
-                    Controller = Controller
-                };
+                var blood = new BloodObject(Position, Controller);
 
                 blood.Place();
             });
@@ -487,7 +553,7 @@ namespace the_game_wpf
 
         private bool CheckMove(MyPoint сoors)
         {
-            GameObject obj = MyMap.GetByCoords(сoors);
+            GameObject obj = Controller.MainMap.GetByCoords(сoors);
 
             if (obj is WallObject || obj is ClosedDoorObject || obj is CoinObject ||
                 obj is BulletObject || obj is TuxObject || obj is DemonObject)
@@ -506,7 +572,7 @@ namespace the_game_wpf
             bool move = false;
 
             foreach (var item in Position.GetNearPoints(StopZone, true))
-                if (MyMap.GetByCoords(item) is HeroObject)
+                if (Controller.MainMap.GetByCoords(item) is HeroObject)
                     return Position;
 
             // Движения "по-тупому"
@@ -545,7 +611,7 @@ namespace the_game_wpf
         public void Move()
         {
             foreach (var item in Position.GetNearPoints(ExitZone, true))
-                if (MyMap.GetByCoords(item) is ExitDoorObject)
+                if (Controller.MainMap.GetByCoords(item) is ExitDoorObject)
                 {
                     Destroy();
                     return;
@@ -553,7 +619,7 @@ namespace the_game_wpf
 
             if (Target is HeroObject)
             {
-                GameObject obj = MyMap.FindNearlyObject(
+                GameObject obj = Controller.MainMap.FindNearlyObject(
                 new GameObject[] { new ExitDoorObject() },
                 Position, Position.GetNearPoints(ViewZoneDoor, false));
                 
@@ -565,7 +631,7 @@ namespace the_game_wpf
             {
                 // найти самый ближайший обьект (игрока или монстра)
                 // TODO: Игрок в приоритете
-                GameObject localObject = MyMap.FindNearlyObject(
+                GameObject localObject = Controller.MainMap.FindNearlyObject(
                     new GameObject[] { new HeroObject() },
                     Position, Position.GetNearPoints(ViewZone, false));
 
@@ -585,7 +651,13 @@ namespace the_game_wpf
         public BloodObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeImage(GetType().Name);
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
+        }
+        public BloodObject(MyPoint startPosition, GameController controller)
+        {
+            Position = startPosition;
+            Controller = controller;
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
         }
     }
     public class HeroObject : GameObject
@@ -600,7 +672,13 @@ namespace the_game_wpf
         public HeroObject(MyPoint startPosition)
         {
             Position = startPosition;
-            Figure = MakeImage(GetType().Name);
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);
+        }
+        public HeroObject(MyPoint startPosition, GameController controller)
+        {
+            Position = startPosition;
+            Controller = controller;
+            Figure = MakeImage(GetType().Name, Controller.MainMap.BlockSizes);   
         }
 
         /// <summary>
@@ -610,11 +688,7 @@ namespace the_game_wpf
         {
             Controller.Window.Dispatcher.Invoke(() =>
             {
-                var blood = new BloodObject(Position)
-                {
-                    MyMap = MyMap,
-                    Controller = Controller
-                };
+                var blood = new BloodObject(Position, Controller);
 
                 blood.Place(true);
             });
@@ -660,17 +734,15 @@ namespace the_game_wpf
                         if (LeftDirection) newCoors.X--;
                         else newCoors.X++;
 
-                        if (MyMap.GetByCoords(newCoors) != null)
+                        if (Controller.MainMap.GetByCoords(newCoors) != null)
                             return false;
 
                         Controller.Window.Dispatcher.Invoke(() =>
                         {
-                            BulletObject bullet = new BulletObject(newCoors)
+                            BulletObject bullet = new BulletObject(newCoors, Controller)
                             {
                                 LeftDirection = LeftDirection,
-                                Controller = Controller,
                                 Position = newCoors,
-                                MyMap = MyMap,
                             };
                             bullet.Place();
                         });
@@ -682,7 +754,7 @@ namespace the_game_wpf
                     return false;
             }
 
-            GameObject inPathObject = MyMap.GetByCoords(newCoors);
+            GameObject inPathObject = Controller.MainMap.GetByCoords(newCoors);
             switch (inPathObject)
             {
                 case ClosedDoorObject _:
@@ -695,12 +767,7 @@ namespace the_game_wpf
                         inPathObject.Destroy();
                         Controller.Window.Dispatcher.Invoke(() =>
                         {
-                            MyMap.PlaceObject(newCoors, new OpenedDoorObject(newCoors)
-                            {
-                                Controller = Controller,
-                                Position = newCoors,
-                                MyMap = MyMap,
-                            });
+                            Controller.MainMap.PlaceObject(newCoors, new OpenedDoorObject(newCoors, Controller));
                         });
                         return false;
                     }
