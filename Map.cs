@@ -97,12 +97,13 @@ namespace the_game_wpf
                                     break;
                             }
 
-                            if (gameObject != null)
+                            if (gameObject is GameObject)
                             {
-
                                 PlaceObject(gameObject.Position, gameObject);
                                 gameObject.MyMap = this;
                                 gameObject.Controller = controller;
+                                gameObject.BlockSizeInPixelsX = (int)(controller.GameField.Width / Width);
+                                gameObject.BlockSizeInPixelsY = (int)(controller.GameField.Height / Height);
                             }
 
                         }

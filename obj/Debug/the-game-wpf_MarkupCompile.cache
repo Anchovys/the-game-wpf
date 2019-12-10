@@ -4,16 +4,16 @@
 exe
 C#
 .cs
-\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\obj\Debug\
+C:\Users\Anchovy\source\repos\the-game-wpf\obj\Debug\
 the_game_wpf
 none
 false
 DEBUG;TRACE
-\\Mac\Home\Desktop\PROGA\MyProjects\the-game-wpf\App.xaml
+C:\Users\Anchovy\source\repos\the-game-wpf\App.xaml
 11151548125
 181821996911
 111381503315
-16-44677554
+151002397254
 MainWindow.xaml;
 
 False

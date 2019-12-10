@@ -11,9 +11,8 @@ namespace the_game_wpf
     {
         public GameController Controller;
 
-        // TODO: Идея - размеры блока в зависимости от размера карты
-        public const int BlockSizeInPixelsX = 16; // размеры блока в пикселях по X
-        public const int BlockSizeInPixelsY = 16; // размеры блока в пикселях по Y
+        public int BlockSizeInPixelsX = 16; // размеры блока в пикселях по X
+        public int BlockSizeInPixelsY = 16; // размеры блока в пикселях по Y
 
         /// <summary>
         /// Возвращает позицию обьекта в пикселях (верхнюю левую точку)
@@ -98,7 +97,7 @@ namespace the_game_wpf
             else
             {
                 Destroy(); // уничтожим старый обьект
-                Console.WriteLine("--> Obj {0} moved to (old : '{1}' --> new : '{2}') [N F]", GetType().Name, Position.ToString(), newPosition.ToString());
+                Console.WriteLine("--> Obj {0} moved [N F] to (old : '{1}' --> new : '{2}')", GetType().Name, Position.ToString(), newPosition.ToString());
                 if (TempMoveObject != null)
                 {
                     TempMoveObject.Position = Position;
@@ -245,59 +244,63 @@ namespace the_game_wpf
             GameObject nextObject = MyMap.GetByCoords(newCoors);
 
             if (nextObject != null)
-                if (nextObject is WallObject)
+                switch (nextObject)
                 {
-                    BulletHealth--;
-                    nextObject.Destroy();
-
-                    Controller.Window.Dispatcher.Invoke(() =>
-                    {
-                        var destroyedWall = new DestroyedWallObject(newCoors)
+                    case WallObject _:
                         {
-                            MyMap = MyMap,
-                            Controller = Controller
-                        };
+                            BulletHealth--;
+                            nextObject.Destroy();
 
-                        destroyedWall.Place();
-                    });
+                            Controller.Window.Dispatcher.Invoke(() =>
+                            {
+                                var destroyedWall = new DestroyedWallObject(newCoors)
+                                {
+                                    MyMap = MyMap,
+                                    Controller = Controller
+                                };
 
-                    return;
-                }
-                else if (nextObject is DemonObject)
-                {
-                    nextObject.Destroy();
+                                destroyedWall.Place();
+                            });
 
-                    Controller.Window.Dispatcher.Invoke(() =>
-                    {
-                        var blood = new BloodObject(newCoors)
+                            return;
+                        }
+
+                    case DemonObject _:
                         {
-                            MyMap = MyMap,
-                            Controller = Controller
-                        };
+                            nextObject.Destroy();
+                            DemonObject demonObject = nextObject as DemonObject;
+                            demonObject.Kill();
+                            return;
+                        }
 
-                        blood.Place();
-                    });
+                    case TuxObject _:
+                        {
+                            nextObject.Destroy();
+                            TuxObject tuxObject = nextObject as TuxObject;
+                            tuxObject.Kill();
+                            return;
+                        }
 
-                    return;
-                }
-                else if (nextObject is TuxObject)
-                {
-                    TuxObject tuxObject = nextObject as TuxObject;
-                    tuxObject.Kill();
-                    return;
-                }
-                else if (nextObject is HeroObject)
-                {
-                    HeroObject heroObject = nextObject as HeroObject;
-                    heroObject.Kill("Вас раздавило пушечным ядром.");
-                    return;
-                }
-                else if (nextObject is CoinObject || nextObject is ClosedDoorObject || nextObject is KeyObject)
-                {
-                    // меняем направление пули
-                    LeftDirection = !LeftDirection;
-                    BulletHealth--;
-                    return;
+                    case HeroObject _:
+                        {
+                            Destroy();
+                            HeroObject heroObject = nextObject as HeroObject;
+                            heroObject.Kill("Вас раздавило пушечным ядром.");
+                            return;
+                        }
+
+                    case BulletObject _:
+                        nextObject.Destroy();
+                        Destroy();
+                        return;
+
+                    case CoinObject _:
+                    case ClosedDoorObject _:
+                    case KeyObject _:
+                        // меняем направление пули
+                        LeftDirection = !LeftDirection;
+                        BulletHealth--;
+                        return;
                 }
 
             Move(newCoors, true);
@@ -334,6 +337,20 @@ namespace the_game_wpf
         {
             Position = startPosition;
             Figure = MakeImage(GetType().Name);
+        }
+
+        public void Kill() 
+        {
+            Controller.Window.Dispatcher.Invoke(() =>
+            {
+                var blood = new BloodObject(Position)
+                {
+                    MyMap = MyMap,
+                    Controller = Controller
+                };
+
+                blood.Place();
+            });
         }
 
         private bool CheckMove(MyPoint сoors) 
@@ -575,7 +592,7 @@ namespace the_game_wpf
     {
         public const char InitChar = '+';   // символ, которым изображен этот обьект на карте
         public bool LeftDirection = false;
-        public bool Haskey = false;
+        public bool HasKey = false;
         public bool HasGun = false;
         public int Ammo = 0;
 
@@ -639,8 +656,12 @@ namespace the_game_wpf
 
                     if (HasGun && Ammo != 0)
                     {
+                        Ammo--;
                         if (LeftDirection) newCoors.X--;
                         else newCoors.X++;
+
+                        if (MyMap.GetByCoords(newCoors) != null)
+                            return false;
 
                         Controller.Window.Dispatcher.Invoke(() =>
                         {
@@ -666,10 +687,10 @@ namespace the_game_wpf
             {
                 case ClosedDoorObject _:
                     // ключ есть
-                    if (Haskey)
+                    if (HasKey)
                     {
                         // испольюзуем ключ
-                        Haskey = false;
+                        HasKey = false;
 
                         inPathObject.Destroy();
                         Controller.Window.Dispatcher.Invoke(() =>
@@ -692,9 +713,9 @@ namespace the_game_wpf
                     return false;
 
                 case KeyObject _:
-                    if(!Haskey) // ключа нет
+                    if(!HasKey) // ключа нет
                     {
-                        Haskey = true; // "подбираем ключ"
+                        HasKey = true; // "подбираем ключ"
                         inPathObject.Destroy();
                     }
                     break;
