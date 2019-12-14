@@ -76,15 +76,15 @@ namespace the_game_wpf
                     // сохраним какие размеры должны иметь элементы
                     BlockSizes = new MyPoint() 
                     { 
-                        X = Controller.GameField.Width / Width, 
-                        Y = Controller.GameField.Height / Height 
+                        X = Math.Round(Controller.Window.Width * 0.9 / Width),
+                        Y = Math.Round(Controller.Window.Height * 0.9 / Height),
                     };
 
                     if (BlockSizes.X > BlockSizes.Y)
                         BlockSizes.X = BlockSizes.Y;
                     else BlockSizes.Y = BlockSizes.X;
 
-                    Console.WriteLine("Block size: {0}", BlockSizes.ToString());
+                    Console.WriteLine("Block size (in Pixels): {0}", BlockSizes.ToString());
 
                     for (int x = 0; x < Width; x++)
                         for (int y = 0; y < Height; y++)

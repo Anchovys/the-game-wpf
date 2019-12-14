@@ -21,7 +21,11 @@ namespace the_game_wpf
         /// <returns>Позиция обьекта</returns>
         public MyPoint GetAbsolutePositionByCoordinates(MyPoint point)
         {
-            return new MyPoint() { X = BlockSizeInPixelsX * point.X, Y = BlockSizeInPixelsY * point.Y };
+            return new MyPoint() 
+            { 
+                X = BlockSizeInPixelsX * point.X, 
+                Y = BlockSizeInPixelsY * point.Y 
+            };
         }
 
         /// <summary>
@@ -32,7 +36,11 @@ namespace the_game_wpf
         /// <returns>Координаты обьекта</returns>
         public MyPoint GetCoordinatesByAbsolutePosition(int x, int y)
         {
-            return new MyPoint() { X = x / BlockSizeInPixelsX, Y = y / BlockSizeInPixelsY };
+            return new MyPoint() 
+            { 
+                X = x / BlockSizeInPixelsX,
+                Y = y / BlockSizeInPixelsY 
+            };
         }
 
         public Rectangle MakeImage(string path, MyPoint changeSizes = null)
@@ -53,18 +61,25 @@ namespace the_game_wpf
                 BlockSizeInPixelsY = (int)changeSizes.Y;
             }
 
-            // создаем прямоугольник
-            return new Rectangle
-            {
-                Width = BlockSizeInPixelsX,
-                Height = BlockSizeInPixelsY,
-                Fill = new ImageBrush  //вся "магия" - здесь. подставим картинку
-                {
-                    ImageSource = new BitmapImage(new Uri(fullpath, UriKind.Relative))
-                },
-                Stretch = Stretch.Fill
-            };
+            Rectangle rect = null;
 
+            // через диспетчер 
+            Controller.Window.Dispatcher.Invoke(() => 
+            {
+                // создаем прямоугольник
+                rect = new Rectangle
+                {
+                    Width = BlockSizeInPixelsX,
+                    Height = BlockSizeInPixelsY,
+                    Fill = new ImageBrush  //вся "магия" - здесь. подставим картинку
+                    {
+                        ImageSource = new BitmapImage(new Uri(fullpath, UriKind.Relative))
+                    },
+                    Stretch = Stretch.Fill
+                };
+            });
+
+            return rect;
         }
     }
     public class GameObject : Item
@@ -136,10 +151,7 @@ namespace the_game_wpf
         /// </summary>
         public void Place(bool replace = false)
         {
-            Controller.Window.Dispatcher.Invoke(() =>
-            {
-                Controller.MainMap.PlaceObject(Position, this, replace);
-            });
+            Controller.MainMap.PlaceObject(Position, this, replace);
         }
     }
     public class OpenedDoorObject : GameObject
@@ -306,12 +318,8 @@ namespace the_game_wpf
                             BulletHealth--;
                             nextObject.Destroy();
 
-                            Controller.Window.Dispatcher.Invoke(() =>
-                            {
-                                var destroyedWall = new DestroyedWallObject(newCoors, Controller);
-
-                                destroyedWall.Place();
-                            });
+                            var destroyedWall = new DestroyedWallObject(newCoors, Controller);
+                            destroyedWall.Place();
 
                             return;
                         }
@@ -410,17 +418,13 @@ namespace the_game_wpf
 
         public void Kill() 
         {
-            Controller.Window.Dispatcher.Invoke(() =>
-            {
-                var blood = new BloodObject(Position, Controller);
-                blood.Place();
-            });
+            var blood = new BloodObject(Position, Controller);
+            blood.Place();
         }
 
         private bool CheckMove(MyPoint сoors) 
         {
             GameObject obj = Controller.MainMap.GetByCoords(сoors);
-
 
             if (obj is WallObject || obj is ClosedDoorObject || obj is CoinObject || obj is BulletObject)
                 return false;
@@ -540,12 +544,8 @@ namespace the_game_wpf
         public void Kill()
         {
             Destroy();
-            Controller.Window.Dispatcher.Invoke(() =>
-            {
-                var blood = new BloodObject(Position, Controller);
-
-                blood.Place();
-            });
+            var blood = new BloodObject(Position, Controller);
+            blood.Place();
 
             Controller.ShowBox("Вы проиграли!\nОдин из пингвинов погиб.");
             Controller.Stop();
@@ -686,12 +686,10 @@ namespace the_game_wpf
         /// </summary>
         public void Kill(string deathReason = "Вы умерли") 
         {
-            Controller.Window.Dispatcher.Invoke(() =>
-            {
-                var blood = new BloodObject(Position, Controller);
-
-                blood.Place(true);
-            });
+            //создаем экземпляр пули на координатах игрока
+            var blood = new BloodObject(Position, Controller);
+            //размещаем с заменой
+            blood.Place(true);
 
             Controller.Stop();
             Controller.ShowBox(deathReason);
@@ -731,21 +729,20 @@ namespace the_game_wpf
                     if (HasGun && Ammo != 0)
                     {
                         Ammo--;
+
                         if (LeftDirection) newCoors.X--;
                         else newCoors.X++;
 
                         if (Controller.MainMap.GetByCoords(newCoors) != null)
                             return false;
 
-                        Controller.Window.Dispatcher.Invoke(() =>
+                        var bullet = new BulletObject(newCoors, Controller)
                         {
-                            BulletObject bullet = new BulletObject(newCoors, Controller)
-                            {
-                                LeftDirection = LeftDirection,
-                                Position = newCoors,
-                            };
-                            bullet.Place();
-                        });
+                            LeftDirection = LeftDirection,
+                            Position = newCoors,
+                        };
+
+                        bullet.Place();
                     }
                     
 
@@ -765,10 +762,10 @@ namespace the_game_wpf
                         HasKey = false;
 
                         inPathObject.Destroy();
-                        Controller.Window.Dispatcher.Invoke(() =>
-                        {
-                            Controller.MainMap.PlaceObject(newCoors, new OpenedDoorObject(newCoors, Controller));
-                        });
+
+                        var openedDoor = new OpenedDoorObject(newCoors, Controller);
+                        openedDoor.Place(true);
+
                         return false;
                     }
                     return false;

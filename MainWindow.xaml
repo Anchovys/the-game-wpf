@@ -5,29 +5,29 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:the_game_wpf"
         mc:Ignorable="d"
-        Title="The Game" Height="707.975" Width="850" ResizeMode="NoResize">
+        Title="The Game" Height="707.975" Width="850">
     <Grid KeyDown="Grid_KeyDown" Margin="0,0,0,3">
-        <TabControl HorizontalAlignment="Left" Height="633" Margin="10,33,0,0" VerticalAlignment="Top" Width="824">
+        <TabControl Margin="10,33,10,10">
             <TabItem Header="Игра">
                 <Grid>
-                    <Canvas x:Name="GameCanvas" Background="Black" HorizontalAlignment="Right" Width="800" Height="600" VerticalAlignment="Top" Margin="0,0,10,-307"/>
+                    <Canvas x:Name="GameCanvas" Background="Black" Margin="8,0,10,5"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Настройки">
+            <TabItem Header="Настройки" HorizontalAlignment="Left" Width="75">
                 <Grid Background="#FFE5E5E5" Margin="0,0,0,1">
-                    <Label Content="Изменить настройки игры вы сможете в файле конфигурации. Или воспользоваться редактором, расположенным ниже." HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="766"/>
-                    <Button x:Name="LoadConfig" Content="Открыть" HorizontalAlignment="Left" Margin="697,75,0,0" VerticalAlignment="Top" Width="75" Click="LoadConfig_Click"/>
-                    <TextBox x:Name="ConfigEditor" IsEnabled="False" HorizontalAlignment="Left" Height="265" Margin="10,100,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="842"/>
-                    <Button x:Name="SaveConfig" IsEnabled="False" Content="Сохранить" HorizontalAlignment="Left" Margin="777,75,0,0" VerticalAlignment="Top" Width="75" Click="SaveConfig_Click"/>
+                    <Label Content="Изменить настройки игры вы сможете в файле конфигурации. Или воспользоваться редактором, расположенным ниже." Margin="10,10,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="766"/>
+                    <Button x:Name="LoadConfig" Content="Открыть" Margin="0,75,90,0" VerticalAlignment="Top" Click="LoadConfig_Click" HorizontalAlignment="Right" Width="73"/>
+                    <TextBox x:Name="ConfigEditor" IsEnabled="False" Margin="10,100,10,239" TextWrapping="Wrap"/>
+                    <Button x:Name="SaveConfig" IsEnabled="False" Content="Сохранить" Margin="0,75,10,0" Click="SaveConfig_Click" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="73"/>
                 </Grid>
             </TabItem>
         </TabControl>
-        <Button x:Name="StartOrPause" Content="Начать" Margin="0,14,10,0" Click="StartOrPause_Click" RenderTransformOrigin="0.96,0.393" HorizontalAlignment="Right" Width="75" Height="28" VerticalAlignment="Top"/>
-        <Canvas HorizontalAlignment="Left" Height="32" Margin="596,14,0,0" VerticalAlignment="Top" Width="94">
+        <Button x:Name="StartOrPause" Content="Начать" Margin="0,14,10,0" Click="StartOrPause_Click" RenderTransformOrigin="0.96,0.393" Height="26" VerticalAlignment="Top" HorizontalAlignment="Right" Width="73"/>
+        <Canvas Margin="596,14,154,0" Height="30" VerticalAlignment="Top">
             <Label x:Name="Scores" Content="0" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="-0.621,0.385" Canvas.Left="26" Width="68" Height="28" Canvas.Top="4"/>
             <Image Height="16" Width="16" Canvas.Left="10" Canvas.Top="10" RenderTransformOrigin="0.188,0" Source="assets/icons/scoreicon.png"/>
         </Canvas>
-        <Canvas HorizontalAlignment="Left" Height="32" Margin="497,11,0,0" VerticalAlignment="Top" Width="94">
+        <Canvas Margin="497,14,253,0" Height="30" VerticalAlignment="Top">
             <Label x:Name="TuxCounts" Content="0" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="-0.621,0.385" Canvas.Left="26" Width="68" Height="28" Canvas.Top="4"/>
             <Image Height="16" Width="16" Canvas.Left="10" Canvas.Top="10" RenderTransformOrigin="0.188,0" Source="assets/icons/tuxicon.png"/>
         </Canvas>

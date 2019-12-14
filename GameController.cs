@@ -90,8 +90,6 @@ namespace the_game_wpf
             sw.Stop();
             Console.WriteLine("Map read && init at '{0}'ms", sw.ElapsedMilliseconds);
 
-            
-
             // ищем игрока
             HeroObject = MainMap.FindObject(new HeroObject()) as HeroObject;
         }
